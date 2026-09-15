@@ -10,33 +10,63 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BasinRouteImport } from './routes/basin'
+import { Route as HowRouteImport } from './routes/how'
+import { Route as PlayRouteImport } from './routes/play'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BasinRoute = BasinRouteImport.update({
+  id: '/basin',
+  path: '/basin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowRoute = HowRouteImport.update({
+  id: '/how',
+  path: '/how',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlayRoute = PlayRouteImport.update({
+  id: '/play',
+  path: '/play',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/basin': typeof BasinRoute
+  '/how': typeof HowRoute
+  '/play': typeof PlayRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/basin': typeof BasinRoute
+  '/how': typeof HowRoute
+  '/play': typeof PlayRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/basin': typeof BasinRoute
+  '/how': typeof HowRoute
+  '/play': typeof PlayRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/basin' | '/how' | '/play'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/basin' | '/how' | '/play'
+  id: '__root__' | '/' | '/basin' | '/how' | '/play'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BasinRoute: typeof BasinRoute
+  HowRoute: typeof HowRoute
+  PlayRoute: typeof PlayRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +78,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/basin': {
+      id: '/basin'
+      path: '/basin'
+      fullPath: '/basin'
+      preLoaderRoute: typeof BasinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how': {
+      id: '/how'
+      path: '/how'
+      fullPath: '/how'
+      preLoaderRoute: typeof HowRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/play': {
+      id: '/play'
+      path: '/play'
+      fullPath: '/play'
+      preLoaderRoute: typeof PlayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BasinRoute: BasinRoute,
+  HowRoute: HowRoute,
+  PlayRoute: PlayRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

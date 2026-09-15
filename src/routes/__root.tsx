@@ -3,6 +3,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 
 import appCss from '../styles.css?url'
+import { Nav } from '../components/nav'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -15,7 +16,7 @@ export const Route = createRootRoute({
         content: 'width=device-width, initial-scale=1',
       },
       {
-        title: 'TanStack Start Starter',
+        title: 'Catapoolt — the curve is the catapult',
       },
     ],
     links: [
@@ -34,7 +35,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body>
+      <body className="bg-paper text-ink">
+        <Nav />
         {children}
         <TanStackDevtools
           config={{

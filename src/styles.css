@@ -1,0 +1,23 @@
+
+@import "tailwindcss";
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+
+@theme {
+  --color-paper: #F5F1E8;
+  --color-ink: #121212;
+  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+}

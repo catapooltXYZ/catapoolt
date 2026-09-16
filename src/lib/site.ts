@@ -57,7 +57,7 @@ export function short(addr: string): string {
 }
 
 export function ponsToken(token: string): string {
-  return `https://www.pons.family/token/${token}`;
+  return `https://www.ponsfamily.com/launchpad/${token.toLowerCase()}`;
 }
 
 export function explorerAddress(addr: string): string {

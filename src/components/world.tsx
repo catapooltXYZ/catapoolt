@@ -86,10 +86,12 @@ export function World({
   progress,
   fired = false,
   waiting = false,
+  curveLine,
 }: {
   progress: number;
   fired?: boolean;
   waiting?: boolean;
+  curveLine?: string | null;
 }) {
   const launched = isLaunched();
 
@@ -113,6 +115,14 @@ export function World({
         </p>
 
         <CaBar />
+        {curveLine ? (
+          <p
+            className="mt-3 font-display text-label tracking-wide text-gold sm:text-xs"
+            style={{ textShadow: "2px 2px 0 #1a1410" }}
+          >
+            {curveLine}
+          </p>
+        ) : null}
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           {launched ? (

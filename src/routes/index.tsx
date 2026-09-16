@@ -3,7 +3,7 @@ import { formatEther } from "viem";
 import { NotchWall, Rails, RopeMeter, World } from "@/components/world";
 import { Btn, Eyebrow, Page, Panel } from "@/components/chrome";
 import { useLaunch } from "@/lib/use-launch";
-import { BRAND, TOKEN_CA, isLaunched, ponsToken, short } from "@/lib/site";
+import { BRAND, TOKEN_CA, ethShort, isLaunched, ponsToken, short } from "@/lib/site";
 
 export const Route = createFileRoute("/")({ component: Home });
 
@@ -16,7 +16,16 @@ function Home() {
 
   return (
     <Page>
-      <World progress={progress} fired={landed} waiting={!launched} />
+      <World
+        progress={progress}
+        fired={landed}
+        waiting={!launched}
+        curveLine={
+          launched && state
+            ? `${ethShort(state.raised, 6)} / ${ethShort(state.threshold, 2)} ETH on the curve`
+            : null
+        }
+      />
 
       <section className="relative z-20 mx-auto grid w-full max-w-6xl gap-5 px-4 py-10 sm:grid-cols-12 sm:px-8">
         <Panel className="sm:col-span-7">

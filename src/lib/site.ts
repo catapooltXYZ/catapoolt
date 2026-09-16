@@ -56,6 +56,16 @@ export function short(addr: string): string {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
+export function ethShort(wei: bigint, digits = 4): string {
+  const neg = wei < 0n;
+  const n = neg ? -wei : wei;
+  const whole = n / 10n ** 18n;
+  const frac = n % 10n ** 18n;
+  const fracStr = frac.toString().padStart(18, "0").slice(0, digits).replace(/0+$/, "");
+  const body = fracStr ? `${whole}.${fracStr}` : whole.toString();
+  return neg ? `-${body}` : body;
+}
+
 export function ponsToken(token: string): string {
   return `https://www.ponsfamily.com/launchpad/${token.toLowerCase()}`;
 }

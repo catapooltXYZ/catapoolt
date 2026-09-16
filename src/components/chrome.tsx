@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/cn";
-import { BRAND, TOKEN_CA, URLS, isLaunched, short } from "@/lib/site";
+import { BRAND, TOKEN_CA, URLS, ethShort, isLaunched, short } from "@/lib/site";
 import { useLaunch } from "@/lib/use-launch";
 
 const NAV = [
@@ -102,6 +102,11 @@ export function DirtNav() {
           </Link>
           <div className="hidden min-w-0 items-center gap-1.5 sm:flex">
             <Chip>${BRAND.ticker}</Chip>
+            {launched && state ? (
+              <Chip>
+                {ethShort(state.raised, 3)}/{ethShort(state.threshold, 1)} ETH
+              </Chip>
+            ) : null}
             <Chip>{pct}%</Chip>
             {!launched && <Chip>T-24</Chip>}
             <Chip>{launched ? short(TOKEN_CA) : "CA pending"}</Chip>
@@ -134,7 +139,7 @@ export function DirtNav() {
 
 export function Marquee() {
   const line =
-    "THE CURVE IS THE CATAPULT  ·  MICE PILE IN  ·  THE FISH IS THE POOL  ·  $POOLT  ·  ROBINHOOD CHAIN  ·  CA PENDING  ·  T-24  ·  ";
+    "THE CURVE IS THE CATAPULT  ·  MICE PILE IN  ·  THE FISH IS THE POOL  ·  $POOLT  ·  ROBINHOOD CHAIN  ·  ";
   return (
     <div className="dirt-bar overflow-hidden border-t-4 border-ink py-3">
       <div className="animate-marquee flex w-max gap-0 font-display text-label tracking-wide text-gold">

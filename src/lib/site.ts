@@ -29,7 +29,7 @@ export const PONS = {
 /** Filled after launch. Empty string = phase 0, CA pending. Never show a fake CA. */
 export const TOKEN_CA = "" as `0x${string}` | "";
 export const CURVE_CA = "" as `0x${string}` | "";
-export const BASIN_CA = "" as `0x${string}` | "";
+export const BASIN_CA = "0x6CF6E6edA0979fd3C9209dd6f544a944CCcAE841" as `0x${string}` | "";
 export const LAUNCH_BLOCK = 0n;
 
 export const INDEXER = {

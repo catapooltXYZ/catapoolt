@@ -30,28 +30,13 @@ function Ground() {
   );
 }
 
-function Clouds() {
+function MeadowPlate() {
   return (
-    <>
-      <img
-        src="/sprites/cloud.png"
-        alt=""
-        className="spr animate-cloud pointer-events-none absolute top-10 h-10 w-28 sm:top-14 sm:h-14 sm:w-40"
-        style={{ left: "-8%" }}
-      />
-      <img
-        src="/sprites/cloud.png"
-        alt=""
-        className="spr animate-cloud pointer-events-none absolute top-24 h-8 w-20 sm:top-28"
-        style={{ left: "18%", animationDuration: "62s", animationDelay: "-20s" }}
-      />
-      <img
-        src="/sprites/cloud.png"
-        alt=""
-        className="spr animate-cloud pointer-events-none absolute top-8 hidden h-12 w-32 sm:block"
-        style={{ left: "55%", animationDuration: "70s", animationDelay: "-32s" }}
-      />
-    </>
+    <img
+      src="/world/meadow.jpg"
+      alt=""
+      className="pointer-events-none absolute inset-0 h-full w-full object-cover object-[center_68%]"
+    />
   );
 }
 
@@ -110,20 +95,20 @@ export function World({
 
   return (
     <div className="relative isolate min-h-[32rem] overflow-hidden bg-sky sm:min-h-[calc(100dvh-3.75rem)]">
-      <div className="pointer-events-none absolute inset-0 bg-linear-to-b from-sky to-sky-deep" />
-      <Clouds />
+      <MeadowPlate />
+      <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-ink/25 via-transparent to-sky/10" />
 
       <div className="relative z-10 mx-auto flex max-w-3xl flex-col items-center px-4 pb-36 pt-8 text-center sm:pb-40 sm:pt-12">
         <h1 className="pixel-title m-0 font-display text-[22px] leading-none tracking-wide sm:text-4xl md:text-5xl">
           CATAPOOLT
         </h1>
-        <p className="mt-5 font-display text-label tracking-wide text-ink sm:text-xs">
+        <p className="mt-5 font-display text-label tracking-wide text-paper sm:text-xs" style={{ textShadow: "2px 2px 0 #1a1410" }}>
           $POOLT · ON ROBINHOOD
         </p>
-        <p className="mt-4 max-w-lg font-display text-label leading-relaxed text-ink sm:text-xs">
+        <p className="mt-4 max-w-lg font-display text-label leading-relaxed text-paper sm:text-xs" style={{ textShadow: "2px 2px 0 #1a1410" }}>
           The curve is the catapult.
         </p>
-        <p className="mt-2 font-display text-label leading-relaxed text-ink sm:text-xs">
+        <p className="mt-2 font-display text-label leading-relaxed text-paper sm:text-xs" style={{ textShadow: "2px 2px 0 #1a1410" }}>
           Mice pile in. The fish is the pool.
         </p>
 
@@ -175,9 +160,8 @@ export function Field({
 }) {
   return (
     <div className="relative min-h-[calc(100dvh-3.75rem)] bg-sky">
+      <MeadowPlate />
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-linear-to-b from-sky to-sky-deep" />
-        <Clouds />
         <div className="pointer-events-auto">
           <Actors progress={progress} fired={fired} waiting={waiting} focus={focus} />
         </div>

@@ -11,9 +11,9 @@ function Pixel({
 }) {
   return (
     <span className="relative inline-block h-full">
-      <img src={a} alt={alt} className="spr block h-full w-auto" />
+      <img src={a} alt={alt} className="vox block h-full w-auto" />
       {b ? (
-        <img src={b} alt="" className="spr animate-frame absolute inset-0 block h-full w-auto" />
+        <img src={b} alt="" className="vox animate-frame absolute inset-0 block h-full w-auto" />
       ) : null}
     </span>
   );
@@ -36,8 +36,8 @@ function Hop({ active, children }: { active: boolean; children: ReactNode }) {
 }
 
 export function MeadowCast({
-  progress,
-  waiting,
+  progress: _progress,
+  waiting: _waiting,
 }: {
   progress: number;
   waiting: boolean;
@@ -95,8 +95,8 @@ export function MeadowCast({
       btn.setAttribute("aria-label", "Tap a mouse");
       btn.innerHTML =
         '<span class="block h-full"><span class="relative inline-block h-full">' +
-        '<img src="/sprites/mouse-a.png" alt="" class="spr block h-full w-auto" />' +
-        '<img src="/sprites/mouse-b.png" alt="" class="spr animate-frame absolute inset-0 block h-full w-auto" />' +
+        '<img src="/sprites/mouse-a.png" alt="" class="vox block h-full w-auto" />' +
+        '<img src="/sprites/mouse-b.png" alt="" class="vox animate-frame absolute inset-0 block h-full w-auto" />' +
         "</span></span>";
       host.appendChild(btn);
       const dur = (Math.abs(to - from) / (0.055 + Math.random() * 0.03)) * 16;
@@ -135,21 +135,8 @@ export function MeadowCast({
     };
   }, [reduce]);
 
-  const wound = Math.max(0, Math.min(1, progress));
-
   return (
     <div ref={stageRef} className="pointer-events-none absolute inset-0 z-20">
-      <div
-        className="meadow-catapult pointer-events-none"
-        style={{ transform: `rotate(${-wound * 8}deg)` }}
-      >
-        <img
-          src="/sprites/catapult.png"
-          alt={waiting ? "Wooden catapult at rest" : `Catapult wound ${Math.round(wound * 100)}%`}
-          className="spr"
-        />
-      </div>
-
       <button
         ref={catRef}
         type="button"
@@ -208,7 +195,6 @@ function Pond({ onPoke, hopping }: { onPoke: () => void; hopping: boolean }) {
 
   return (
     <div className="meadow-pond pointer-events-auto">
-      <img src="/sprites/water.png" alt="" className="spr meadow-pond-water" />
       <button ref={aRef} type="button" className="pond-fish f-a" onClick={onPoke} aria-label="Tap the koi">
         <Hop active={hopping}>
           <Pixel a="/sprites/fish-a.png" b="/sprites/fish-b.png" alt="" />

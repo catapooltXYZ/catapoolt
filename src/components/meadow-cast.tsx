@@ -32,8 +32,10 @@ function usePrefersReduce() {
 }
 
 function Hop({ active, children }: { active: boolean; children: ReactNode }) {
-  return <span className={active ? "spook block h-full" : "block h-full"}>{children}</span>;
+  return <span className={active ? "leap block h-full" : "block h-full"}>{children}</span>;
 }
+
+const GRASS_END = 0.62;
 
 export function MeadowCast({
   progress: _progress,
@@ -48,26 +50,26 @@ export function MeadowCast({
   const [hop, setHop] = useState<string | null>(null);
   const poke = (id: string) => {
     setHop(id);
-    window.setTimeout(() => setHop((cur) => (cur === id ? null : cur)), 420);
+    window.setTimeout(() => setHop((cur) => (cur === id ? null : cur)), 720);
   };
 
   useEffect(() => {
     const el = catRef.current;
     const host = stageRef.current;
     if (!el || !host || reduce) return;
-    let x = 72;
+    let x = host.clientWidth * 0.18;
     let dir = 1;
     let raf = 0;
     const step = () => {
       const w = el.offsetWidth || 96;
-      const max = Math.max(24, host.clientWidth - w - 16);
-      x += dir * 0.72;
+      const max = Math.max(24, host.clientWidth * GRASS_END - w);
+      x += dir * 0.7;
       if (x >= max) {
         x = max;
         dir = -1;
       }
-      if (x <= 12) {
-        x = 12;
+      if (x <= 10) {
+        x = 10;
         dir = 1;
       }
       el.style.transform = `translateX(${x}px) scaleX(${dir})`;
@@ -86,12 +88,15 @@ export function MeadowCast({
     const spawn = () => {
       if (!alive || mice.length >= 3) return;
       const W = host.clientWidth;
+      const grass = W * GRASS_END;
       const dir = Math.random() < 0.5 ? 1 : -1;
-      const from = dir === 1 ? -80 : W + 8;
-      const to = dir === 1 ? W + 8 : -80;
+      const from = dir === 1 ? -70 : grass;
+      const to = dir === 1 ? grass : -70;
+      const lane = Math.floor(Math.random() * 3) * 6;
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "meadow-mouse";
+      btn.style.bottom = `calc(var(--ground-h) + ${lane}px)`;
       btn.setAttribute("aria-label", "Tap a mouse");
       btn.innerHTML =
         '<span class="block h-full"><span class="relative inline-block h-full">' +
@@ -99,7 +104,7 @@ export function MeadowCast({
         '<img src="/sprites/mouse-b.png" alt="" class="vox animate-frame absolute inset-0 block h-full w-auto" />' +
         "</span></span>";
       host.appendChild(btn);
-      const dur = (Math.abs(to - from) / (0.055 + Math.random() * 0.03)) * 16;
+      const dur = (Math.abs(to - from) / (0.05 + Math.random() * 0.025)) * 16;
       const anim = btn.animate(
         [
           { transform: `translateX(${from}px) scaleX(${dir})` },
@@ -115,8 +120,9 @@ export function MeadowCast({
         if (i >= 0) mice.splice(i, 1);
       };
       btn.addEventListener("click", () => {
-        btn.querySelector("span")?.classList.add("spook");
-        window.setTimeout(() => btn.querySelector("span")?.classList.remove("spook"), 420);
+        const inner = btn.querySelector("span");
+        inner?.classList.add("leap");
+        window.setTimeout(() => inner?.classList.remove("leap"), 720);
       });
     };
 
@@ -161,7 +167,8 @@ function Pond({ onPoke, hopping }: { onPoke: () => void; hopping: boolean }) {
 
   useEffect(() => {
     if (reduce) return;
-    const run = (el: HTMLButtonElement | null, speed: number, start: number) => {
+    const timers: number[] = [];
+    const run = (el: HTMLButtonElement | null, speed: number, start: number, leapEvery: number) => {
       if (!el) return () => {};
       const pond = el.parentElement;
       if (!pond) return () => {};
@@ -183,13 +190,24 @@ function Pond({ onPoke, hopping }: { onPoke: () => void; hopping: boolean }) {
         raf = requestAnimationFrame(step);
       };
       raf = requestAnimationFrame(step);
+      const inner = () => el.querySelector("span");
+      const leap = () => {
+        inner()?.classList.add("leap");
+        window.setTimeout(() => inner()?.classList.remove("leap"), 720);
+      };
+      timers.push(window.setTimeout(leap, 900));
+      timers.push(window.setInterval(leap, leapEvery));
       return () => cancelAnimationFrame(raf);
     };
-    const stopA = run(aRef.current, 0.45, 16);
-    const stopB = run(bRef.current, 0.32, 90);
+    const stopA = run(aRef.current, 0.42, 18, 3200);
+    const stopB = run(bRef.current, 0.3, 110, 4100);
     return () => {
       stopA();
       stopB();
+      timers.forEach((t) => {
+        window.clearTimeout(t);
+        window.clearInterval(t);
+      });
     };
   }, [reduce]);
 

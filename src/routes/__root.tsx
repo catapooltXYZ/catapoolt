@@ -11,7 +11,7 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: `${BRAND.name} — ${BRAND.line}` },
       { name: "description", content: `${BRAND.line} ${BRAND.sub}` },
-      { name: "theme-color", content: "#0B0B0C" },
+      { name: "theme-color", content: "#BFE9FF" },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
@@ -22,7 +22,7 @@ export const Route = createRootRoute({
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Archivo+Black&family=Figtree:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Press+Start+2P&display=swap",
       },
     ],
   }),
@@ -35,7 +35,7 @@ function RootDocument() {
       <head>
         <HeadContent />
       </head>
-      <body className="bg-night text-paper">
+      <body className="bg-sky text-ink">
         <PreviewHostBridge />
         <AuthProvider>
           <Outlet />

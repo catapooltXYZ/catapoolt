@@ -2,38 +2,37 @@ import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/cn";
 import { BRAND, TOKEN_CA, URLS, isLaunched, short } from "@/lib/site";
+import { useLaunch } from "@/lib/use-launch";
 
 const NAV = [
-  { to: "/", label: "Watch" },
   { to: "/how", label: "How" },
   { to: "/play", label: "Play" },
-  { to: "/landing", label: "Landing" },
-  { to: "/basin", label: "Basin" },
+  { to: "/landing", label: "Land" },
+  { to: "/basin", label: "Pond" },
 ] as const;
 
-export function Wordmark({ size = "md" }: { size?: "sm" | "md" }) {
-  const letters = BRAND.name.toUpperCase().split("");
-  const box = size === "sm" ? "size-6 text-label" : "size-7 text-label sm:size-8 sm:text-xs";
+const hudBtn =
+  "inline-flex min-h-11 shrink-0 items-center rounded-sm bg-paper px-3 font-display text-label uppercase tracking-wide text-ink pixel-border hover:bg-rope hover:text-paper sm:min-h-12 sm:px-4";
+
+export function Wordmark({ light = false }: { light?: boolean }) {
   return (
-    <span className="flex items-center gap-px sm:gap-0.5" aria-label={BRAND.name}>
-      {letters.map((ch, i) => (
-        <span
-          key={`${ch}${i}`}
-          className={cn(
-            "grid place-items-center rounded-full bg-paper font-display leading-none text-night",
-            box,
-          )}
-        >
-          {ch}
-        </span>
-      ))}
+    <span className="flex items-center gap-2" aria-label={BRAND.name}>
+      <img src="/cast/logo.png" alt="" className="size-10 rounded-sm pixel-border sm:size-12" />
+      <span
+        className={cn(
+          "font-display text-[10px] leading-none tracking-wide sm:text-xs",
+          light ? "pixel-title" : "text-ink",
+        )}
+      >
+        {BRAND.name.toUpperCase()}
+      </span>
     </span>
   );
 }
 
 export function Eyebrow({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <p className={cn("font-mono text-label uppercase tracking-wide-label text-mute", className)}>
+    <p className={cn("font-display text-label uppercase tracking-wide-label text-mute", className)}>
       {children}
     </p>
   );
@@ -55,10 +54,10 @@ export function Btn({
   className?: string;
 }) {
   const cls = cn(
-    "inline-flex min-h-12 items-center justify-center rounded-lg px-6 font-display tracking-wide transition-[color,background-color,border-color,transform] duration-150 ease-out active:not-disabled:scale-[0.96]",
+    "inline-flex min-h-12 items-center justify-center rounded-sm px-5 font-display text-label tracking-wide transition-transform duration-150 ease-out active:not-disabled:scale-[0.96]",
     tone === "primary"
-      ? "bg-rope text-night hover:bg-paper"
-      : "border border-paper/20 text-paper hover:border-rope hover:text-rope",
+      ? "bg-rope text-paper pixel-border hover:bg-ink"
+      : "bg-paper text-ink pixel-border hover:bg-sky",
     disabled && "pointer-events-none opacity-40",
     className,
   );
@@ -76,43 +75,77 @@ export function Btn({
   );
 }
 
-export function SiteNav() {
+export function HudChip({
+  children,
+  tone = "paper",
+  className,
+}: {
+  children: ReactNode;
+  tone?: "paper" | "rope";
+  className?: string;
+}) {
   return (
-    <header className="sticky top-0 z-20 border-b border-paper/10 bg-night">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
-        <Link to="/" className="self-start" aria-label="Catapoolt home">
-          <Wordmark />
-        </Link>
-        <nav className="flex flex-wrap items-center gap-x-5 gap-y-1 font-mono text-label uppercase tracking-wide-label text-mute">
-          {NAV.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className="flex min-h-11 items-center text-paper/70 transition-colors duration-150 hover:text-rope [&.active]:text-paper [&.active]:underline [&.active]:decoration-rope [&.active]:underline-offset-8"
-            >
-              {item.label}
-            </Link>
-          ))}
-          <a
-            href={URLS.x}
-            target="_blank"
-            rel="noreferrer"
-            className="flex min-h-11 items-center hover:text-rope"
-          >
-            X
-          </a>
-        </nav>
+    <span
+      className={cn(
+        "inline-flex min-h-10 items-center rounded-sm px-3 font-display text-label tracking-wide pixel-border",
+        tone === "rope" ? "bg-rope text-paper" : "bg-paper text-ink",
+        className,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+export function WorldHud() {
+  const { state } = useLaunch();
+  const launched = isLaunched();
+  const pct = Math.max(0, Math.min(100, (state?.progress ?? 0) * 100));
+
+  return (
+    <>
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-50 h-1.5 bg-ink/20">
+        <div
+          className="h-full bg-rope transition-[width] duration-500 ease-out"
+          style={{ width: `${pct}%` }}
+        />
       </div>
-    </header>
+      <header className="pointer-events-none fixed inset-x-0 top-0 z-40 flex items-start justify-between gap-3 p-3 pt-3.5 sm:p-4 sm:pt-5">
+        <Link to="/" className="pointer-events-auto" aria-label="Catapoolt home">
+          <Wordmark light />
+        </Link>
+        <div className="pointer-events-auto flex flex-wrap items-center justify-end gap-2">
+          <HudChip>${BRAND.ticker}</HudChip>
+          <HudChip>{launched ? `${pct.toFixed(0)}%` : "0%"}</HudChip>
+          {!launched && <HudChip tone="rope">T-24</HudChip>}
+          <HudChip className="hidden sm:inline-flex">{launched ? short(TOKEN_CA) : "CA pending"}</HudChip>
+        </div>
+      </header>
+      <nav className="fixed inset-x-0 bottom-0 z-40 flex flex-nowrap items-center justify-center gap-1.5 overflow-x-auto p-3 pb-[max(0.65rem,env(safe-area-inset-bottom))] sm:gap-3 sm:p-4">
+        {NAV.map((item) => (
+          <Link
+            key={item.to}
+            to={item.to}
+            className={hudBtn}
+            activeProps={{ className: "bg-rope text-paper hover:bg-ink" }}
+          >
+            {item.label}
+          </Link>
+        ))}
+        <a href={URLS.x} target="_blank" rel="noreferrer" className={hudBtn}>
+          X
+        </a>
+      </nav>
+    </>
   );
 }
 
 export function SiteFooter() {
   return (
-    <footer className="mx-auto mt-16 w-full max-w-6xl border-t border-paper/10 px-5 py-8 font-mono text-label leading-relaxed text-mute sm:px-8">
-      <p>{BRAND.credit}</p>
-      <p className="mt-1">{BRAND.disclaimer}</p>
-      <p className="mt-3 text-paper/40">
+    <footer className="relative z-20 mx-auto w-full max-w-6xl px-5 pb-28 pt-8 font-sans text-sm leading-relaxed text-ink/70 sm:px-8">
+      <p className="font-display text-label leading-relaxed">{BRAND.credit}</p>
+      <p className="mt-2">{BRAND.disclaimer}</p>
+      <p className="mt-3 font-display text-label">
         {isLaunched() ? `CA ${short(TOKEN_CA)}` : "CA pending"} · Robinhood Chain 4663 · $
         {BRAND.ticker}
       </p>
@@ -122,9 +155,8 @@ export function SiteFooter() {
 
 export function Page({ children }: { children: ReactNode }) {
   return (
-    <div className="relative min-h-dvh bg-night text-paper">
-      <div className="night-dust absolute inset-0" />
-      <SiteNav />
+    <div className="relative min-h-dvh overflow-x-hidden bg-sky text-ink">
+      <WorldHud />
       <main className="relative">{children}</main>
       <SiteFooter />
     </div>
@@ -138,9 +170,5 @@ export function Panel({
   children: ReactNode;
   className?: string;
 }) {
-  return (
-    <div className={cn("rounded-2xl border border-paper/10 bg-raised p-5 sm:p-6", className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn("rounded-sm bg-paper p-5 pixel-border sm:p-6", className)}>{children}</div>;
 }

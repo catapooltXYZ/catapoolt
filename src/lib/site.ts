@@ -2,7 +2,7 @@ export const BRAND = {
   name: "Catapoolt",
   ticker: "POOLT",
   line: "The curve is the catapult.",
-  sub: "Every buy winds it. The pool is where the cat lands.",
+  sub: "Every buy winds it. The mice pile in. The fish is the pool.",
   credit: 'Game engine based on "Catapoolt" by glebv (js13k 2025, MIT). Unofficial.',
   disclaimer: "pons v2 is unaudited. This is not an audit, a promise, or a payout.",
 } as const;

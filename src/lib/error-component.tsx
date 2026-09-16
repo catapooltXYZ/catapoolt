@@ -10,9 +10,9 @@ function errorMessage(error: unknown): string {
 
 export function AppErrorComponent({ error }: ErrorComponentProps) {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-3 bg-paper px-6 text-center text-ink">
-      <h1 className="font-display text-2xl">Something went wrong</h1>
-      <p className="max-w-md break-words font-mono text-sm text-mute">{errorMessage(error)}</p>
+    <main className="flex min-h-screen flex-col items-center justify-center gap-3 bg-sky px-6 text-center text-ink">
+      <h1 className="font-display text-sm sm:text-base">Something went wrong</h1>
+      <p className="max-w-md break-words font-sans text-sm text-mute">{errorMessage(error)}</p>
     </main>
   );
 }

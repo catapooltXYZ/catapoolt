@@ -2,9 +2,10 @@ import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/cn";
 import { BRAND, TOKEN_CA, URLS, isLaunched, short } from "@/lib/site";
+import { useLaunch } from "@/lib/use-launch";
 
 const NAV = [
-  { to: "/", label: "Home" },
+  { to: "/", label: "Watch" },
   { to: "/how", label: "How" },
   { to: "/play", label: "Play" },
   { to: "/landing", label: "Land" },
@@ -65,25 +66,56 @@ export function Btn({
   );
 }
 
+function Chip({ children }: { children: ReactNode }) {
+  return (
+    <span className="inline-flex min-h-8 items-center rounded-full border border-paper/20 px-2.5 font-display text-label tracking-wide text-paper">
+      {children}
+    </span>
+  );
+}
+
+function TensionRope({ value }: { value: number }) {
+  const pct = Math.max(0, Math.min(100, value * 100));
+  return (
+    <div className="h-2 w-full bg-wood/80" aria-hidden>
+      <div
+        className="h-full bg-rope transition-[width] duration-500 ease-out"
+        style={{ width: `${pct}%` }}
+      />
+    </div>
+  );
+}
+
 export function DirtNav() {
   const launched = isLaunched();
+  const { state } = useLaunch();
+  const progress = state?.progress ?? 0;
+  const pct = Math.round(progress * 100);
+  const landed = (state?.phase ?? 0) >= 2;
+
   return (
     <header className="sticky top-0 z-50">
-      <div className="h-1 bg-grass" />
+      <TensionRope value={progress} />
       <div className="dirt-bar border-b-4 border-ink">
-        <div className="mx-auto flex min-h-14 w-full max-w-6xl items-center gap-3 px-3 py-2 sm:px-4">
+        <div className="mx-auto flex min-h-14 w-full max-w-6xl flex-wrap items-center gap-2 px-3 py-2 sm:px-4">
           <Link to="/" className="shrink-0" aria-label="Catapoolt home">
             <Wordmark />
           </Link>
-          <nav className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto sm:justify-center sm:gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <Chip>${BRAND.ticker}</Chip>
+            <Chip>{pct}%</Chip>
+            {!launched && <Chip>T-24</Chip>}
+            <Chip>{launched ? short(TOKEN_CA) : "CA pending"}</Chip>
+          </div>
+          <nav className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto sm:justify-end sm:gap-2">
             {NAV.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
                 className="mc-btn inline-flex min-h-10 shrink-0 items-center bg-dirt-dark px-2 font-display text-label uppercase tracking-wide text-paper hover:bg-wood sm:px-3"
-                activeProps={{ className: "bg-gold text-ink hover:bg-gold" }}
+                activeProps={{ className: "bg-rope text-paper hover:bg-rope" }}
               >
-                {item.label}
+                {item.to === "/play" && !landed ? `${item.label} · lock` : item.label}
               </Link>
             ))}
             <a
@@ -95,11 +127,6 @@ export function DirtNav() {
               X
             </a>
           </nav>
-          {!launched && (
-            <span className="mc-btn hidden shrink-0 bg-rope px-3 py-2 font-display text-label text-paper sm:inline-flex">
-              T-24
-            </span>
-          )}
         </div>
       </div>
     </header>

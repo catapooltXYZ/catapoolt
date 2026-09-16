@@ -27,10 +27,10 @@ export const PONS = {
 } as const;
 
 /** Filled after launch. Empty string = phase 0, CA pending. Never show a fake CA. */
-export const TOKEN_CA = "" as `0x${string}` | "";
-export const CURVE_CA = "" as `0x${string}` | "";
+export const TOKEN_CA = "0x8D0662FA3Be60A6F95eda1C1380Ed75355B6DC40" as `0x${string}` | "";
+export const CURVE_CA = "0x42A0002F14990f1c1A9EB5756C129Cd5B667274E" as `0x${string}` | "";
 export const BASIN_CA = "0x6CF6E6edA0979fd3C9209dd6f544a944CCcAE841" as `0x${string}` | "";
-export const LAUNCH_BLOCK = 0n;
+export const LAUNCH_BLOCK = 64725313n;
 
 export const INDEXER = {
   pollMs: 15_000,

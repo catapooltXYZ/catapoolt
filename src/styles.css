@@ -1,23 +1,106 @@
-
 @import "tailwindcss";
 
-* {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#app {
-  min-height: 100%;
-}
-
-body {
-  margin: 0;
-}
-
-
 @theme {
-  --color-paper: #F5F1E8;
-  --color-ink: #121212;
+  --color-night: #0b0b0c;
+  --color-raised: #161412;
+  --color-paper: #f4ede0;
+  --color-mute: #8a8478;
+  --color-rope: #ff6a2b;
+  --color-pool: #12b5c9;
+  --color-eye: #8cff2a;
+  --color-wood: #2a1c14;
   --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Archivo Black", "Figtree", ui-sans-serif, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --text-label: 0.6875rem;
+  --tracking-wide-label: 0.22em;
+  --animate-breathe: breathe 3.8s ease-in-out infinite;
+  --animate-ripple: ripple 4.2s ease-in-out infinite;
+  --animate-sway: sway 5.4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  50% {
+    transform: translateY(5px) scale(1.035, 0.97);
+  }
+}
+
+@keyframes ripple {
+  0%,
+  100% {
+    transform: scaleX(1);
+    opacity: 0.45;
+  }
+  50% {
+    transform: scaleX(1.07);
+    opacity: 0.8;
+  }
+}
+
+@keyframes sway {
+  0%,
+  100% {
+    transform: rotate(-1.1deg);
+  }
+  50% {
+    transform: rotate(1.1deg);
+  }
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html,
+  body,
+  #app {
+    min-height: 100%;
+    background: var(--color-night);
+    color: var(--color-paper);
+  }
+
+  body {
+    margin: 0;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-breathe,
+  .animate-ripple,
+  .animate-sway {
+    animation: none !important;
+  }
+}
+
+.night-dust {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  opacity: 0.045;
+  pointer-events: none;
+}
+
+.arm-pivot {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
 }

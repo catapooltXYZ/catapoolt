@@ -81,21 +81,22 @@ contract Basin {
         emit Received(msg.sender, msg.value);
     }
 
-    // --- one-shot wiring (permissionless on purpose: bind in the same hour) ---
+    // --- one-shot wiring. onlyOps: permissionless set is a front-run lock ---
 
-    function setToken(address t) external {
+    function setToken(address t) external onlyOps {
         if (token != address(0)) revert AlreadySet();
         require(t != address(0), "zero");
         token = t;
         emit TokenSet(t);
     }
 
-    function setCurve(address c) external {
+    function setCurve(address c) external onlyOps {
         if (curve != address(0)) revert AlreadySet();
         require(c != address(0), "zero");
         curve = c;
         emit CurveSet(c);
     }
+
 
     // --- fees ---
 

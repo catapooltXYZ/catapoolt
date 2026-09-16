@@ -1,166 +1,304 @@
-import { createPublicClient, http, parseAbi, parseAbiItem, defineChain } from "viem";
-import { CHAIN, PONS, INDEXER, TOKEN_CA, CURVE_CA, LAUNCH_BLOCK } from "./site";
+import {
+  createPublicClient,
+  defineChain,
+  http,
+  parseAbi,
+  parseAbiItem,
+  type Address,
+  type Log,
+} from "viem";
+import {
+  BASIN_CA,
+  CHAIN_ID,
+  CURVE_CA,
+  INDEXER,
+  LAUNCH_BLOCK,
+  PONS,
+  TOKEN_CA,
+  URLS,
+  asAddr,
+  isAddr,
+  isLaunched,
+} from "./site";
 
 export const robinhood = defineChain({
-  id: CHAIN.id,
-  name: CHAIN.name,
-  nativeCurrency: CHAIN.nativeCurrency,
-  rpcUrls: { default: { http: [CHAIN.rpc] } },
-  blockExplorers: { default: { name: "Blockscout", url: CHAIN.explorer } },
+  id: CHAIN_ID,
+  name: "Robinhood Chain",
+  nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+  rpcUrls: {
+    default: { http: [URLS.rpc] },
+  },
+  blockExplorers: {
+    default: { name: "Blockscout", url: URLS.explorer },
+  },
 });
 
-// This chain rejects JSON-RPC batch requests. Keep every call sequential.
 export const client = createPublicClient({
   chain: robinhood,
-  transport: http(CHAIN.rpc, { batch: false, retryCount: INDEXER.retries }),
-  batch: { multicall: false },
+  transport: http(URLS.rpc, { batch: false, retryCount: 2, timeout: 20_000 }),
 });
 
-export const factoryAbi = parseAbi([
-  "struct LaunchedToken { address token; address curve; address deployer; address creatorFeeRecipient; address pairToken; uint256 graduationThreshold; uint24 poolFee; int24 tickSpacing; uint16 creatorTaxBps; bool buybackEnabled; uint8 phase; uint256 sweptQuote; uint256 sweptTokens; uint256 sweptAt; bool exists; }",
-  "function getLaunchedToken(address token) view returns (LaunchedToken)",
-  "function canLaunch(address who) view returns (bool)",
-  "function maxCreatorTaxBps() view returns (uint16)",
-  "function createGraduatedPool(address token)",
+const factoryAbi = parseAbi([
+  "function getLaunchedToken(address token) view returns ((address token, address curve, address deployer, address creatorFeeRecipient, address pairToken, uint256 graduationThreshold, uint24 poolFee, int24 tickSpacing, uint16 creatorTaxBps, bool buybackEnabled, uint8 phase, uint256 sweptQuote, uint256 sweptTokens, uint256 sweptAt, bool exists))",
+  "function createGraduatedPool(address token) returns (uint256 positionId)",
+  "function transferCreatorFeeRecipient(address token, address newRecipient)",
 ]);
 
-export const curveAbi = parseAbi([
-  "function getReserves() view returns (uint256 quoteReserve, uint256 tokenReserve)",
+const curveAbi = parseAbi([
   "function realQuoteReserve() view returns (uint256)",
   "function graduationThreshold() view returns (uint256)",
-  "function sellableTokens() view returns (uint256)",
   "function readyToGraduate() view returns (bool)",
   "function graduated() view returns (bool)",
   "function feeBps() view returns (uint256)",
   "function creatorTaxBps() view returns (uint256)",
+  "function sellableTokens() view returns (uint256)",
   "function currentSnipeTaxBps(address recipient) view returns (uint256)",
 ]);
 
-export const buybackAbi = parseAbi([
+export const basinAbi = parseAbi([
+  "function harvest()",
+  "function harvestToken(address asset)",
+  "function pendingEscrow() view returns (uint256)",
+  "function hoard() view returns (uint256 locked, uint256 releasable)",
+  "function totalReceived() view returns (uint256)",
+  "function token() view returns (address)",
+  "function curve() view returns (address)",
+  "function ops() view returns (address)",
+]);
+
+const vaultAbi = parseAbi([
   "function totalLocked(address token) view returns (uint256)",
-  "function vestedAmount(address token) view returns (uint256)",
   "function releasable(address token) view returns (uint256)",
 ]);
 
-export const curveBuy = parseAbiItem(
+const escrowAbi = parseAbi([
+  "function balanceOf(address recipient) view returns (uint256)",
+]);
+
+const buyEvent = parseAbiItem(
   "event CurveBuy(address indexed buyer, address indexed recipient, uint256 quoteIn, uint256 tokensOut, uint256 fee, uint256 tax)",
 );
-export const curveSell = parseAbiItem(
+const sellEvent = parseAbiItem(
   "event CurveSell(address indexed seller, address indexed recipient, uint256 tokensIn, uint256 quoteOut, uint256 fee, uint256 tax)",
 );
 
-export type Phase = 0 | 1 | 2 | 3; // NotGraduated | Swept | PoolCreated | Rescued
-
 export type LaunchState = {
-  phase: Phase;
+  phase: number;
   raised: bigint;
   threshold: bigint;
-  progress: number;       // 0..1, drives the catapult arm
-  sellable: bigint;
-  readyToGraduate: boolean;
+  progress: number;
+  ready: boolean;
+  graduated: boolean;
   feeBps: bigint;
   creatorTaxBps: bigint;
-  hoard: bigint;          // buyback supply locked = how big the cat is
+  sellable: bigint;
+  buybackEnabled: boolean;
+  creatorFeeRecipient: Address;
 };
-
-const read = <T,>(p: Promise<T>, fallback: T) => p.catch(() => fallback);
-
-/// Sequential on purpose: no batch, no multicall on this RPC.
-export async function readLaunchState(): Promise<LaunchState | null> {
-  if (!TOKEN_CA || !CURVE_CA) return null;
-
-  const launch = await client.readContract({
-    address: PONS.factory, abi: factoryAbi,
-    functionName: "getLaunchedToken", args: [TOKEN_CA],
-  });
-
-  const curve = { address: CURVE_CA, abi: curveAbi } as const;
-  const raised = await read(client.readContract({ ...curve, functionName: "realQuoteReserve" }), 0n);
-  const threshold = await read(client.readContract({ ...curve, functionName: "graduationThreshold" }), 1n);
-  const sellable = await read(client.readContract({ ...curve, functionName: "sellableTokens" }), 0n);
-  const ready = await read(client.readContract({ ...curve, functionName: "readyToGraduate" }), false);
-  const feeBps = await read(client.readContract({ ...curve, functionName: "feeBps" }), 0n);
-  const taxBps = await read(client.readContract({ ...curve, functionName: "creatorTaxBps" }), 0n);
-  const hoard = await read(client.readContract({
-    address: PONS.buybackVault, abi: buybackAbi,
-    functionName: "totalLocked", args: [TOKEN_CA],
-  }), 0n);
-
-  const progress = threshold > 0n
-    ? Math.min(1, Number((raised * 10_000n) / threshold) / 10_000)
-    : 0;
-
-  return {
-    phase: Number(launch.phase) as Phase,
-    raised, threshold, progress, sellable,
-    readyToGraduate: ready, feeBps, creatorTaxBps: taxBps, hoard,
-  };
-}
 
 export type Notch = {
   kind: "buy" | "sell";
-  wallet: `0x${string}`;   // recipient, not the router
-  quote: bigint;
-  tokens: bigint;
-  block: bigint;
+  wallet: Address;
   tx: `0x${string}`;
-  index: number;           // 1-based notch number; 1..50 = Founding Fifty
+  logIndex: number;
+  block: bigint;
+  index: number;
+  quote: bigint;
 };
 
-/// Chunked, sequential, retrying log scan. No keeper, no server, no database.
-/// Pass the last scanned block back in to continue where the poll left off.
-export async function scanNotches(fromBlock: bigint, seen = 0) {
-  if (!CURVE_CA) return { notches: [] as Notch[], scannedTo: fromBlock };
+export type BasinState = {
+  eth: bigint;
+  pending: bigint;
+  locked: bigint;
+  releasable: bigint;
+};
 
-  const head = await client.getBlockNumber();
-  const out: Notch[] = [];
-  let cursor = fromBlock > 0n ? fromBlock : LAUNCH_BLOCK;
-  let index = seen;
-
-  while (cursor <= head) {
-    const to = cursor + INDEXER.chunk - 1n > head ? head : cursor + INDEXER.chunk - 1n;
-    const logs = await withRetry(() =>
-      client.getLogs({ address: CURVE_CA, events: [curveBuy, curveSell], fromBlock: cursor, toBlock: to }),
-    );
-    for (const log of logs) {
-      const buy = log.eventName === "CurveBuy";
-      const a = log.args as Record<string, bigint | `0x${string}`>;
-      out.push({
-        kind: buy ? "buy" : "sell",
-        wallet: a.recipient as `0x${string}`,
-        quote: (buy ? a.quoteIn : a.quoteOut) as bigint,
-        tokens: (buy ? a.tokensOut : a.tokensIn) as bigint,
-        block: log.blockNumber!,
-        tx: log.transactionHash!,
-        index: buy ? ++index : index,
-      });
-    }
-    cursor = to + 1n;
-  }
-  return { notches: out, scannedTo: head };
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
 }
 
-async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
-  let wait = INDEXER.backoffMs;
-  for (let i = 0; i < INDEXER.retries; i++) {
+function isRateLimit(err: unknown): boolean {
+  const s = err instanceof Error ? err.message : String(err);
+  return s.includes("429") || s.toLowerCase().includes("rate") || s.includes("-32005");
+}
+
+async function read<T>(fn: () => Promise<T>): Promise<T> {
+  let wait = 400;
+  for (let i = 0; i < 5; i++) {
     try {
       return await fn();
-    } catch (e) {
-      if (i === INDEXER.retries - 1) throw e;
-      await new Promise((r) => setTimeout(r, wait));
-      wait *= 2; // 429 is normal on this RPC
+    } catch (err) {
+      if (!isRateLimit(err) || i === 4) throw err;
+      await sleep(wait);
+      wait *= 2;
     }
   }
-  throw new Error("unreachable");
+  throw new Error("rpc");
 }
 
-/// Permissionless rescue: if auto-graduation ran out of gas, anyone can finish it.
-/// This is the button that replaces the keeper we are never writing again.
-export function finishLaunchCall() {
+export async function readLaunchState(): Promise<LaunchState | null> {
+  const token = asAddr(TOKEN_CA);
+  const curve = asAddr(CURVE_CA);
+  if (!token || !curve) return null;
+
+  const launch = await read(() =>
+    client.readContract({
+      address: PONS.factory,
+      abi: factoryAbi,
+      functionName: "getLaunchedToken",
+      args: [token],
+    }),
+  );
+  if (!launch.exists) return null;
+
+  const raised = await read(() =>
+    client.readContract({ address: curve, abi: curveAbi, functionName: "realQuoteReserve" }),
+  );
+  const threshold = await read(() =>
+    client.readContract({ address: curve, abi: curveAbi, functionName: "graduationThreshold" }),
+  );
+  const ready = await read(() =>
+    client.readContract({ address: curve, abi: curveAbi, functionName: "readyToGraduate" }),
+  );
+  const graduated = await read(() =>
+    client.readContract({ address: curve, abi: curveAbi, functionName: "graduated" }),
+  );
+  const feeBps = await read(() =>
+    client.readContract({ address: curve, abi: curveAbi, functionName: "feeBps" }),
+  );
+  const creatorTaxBps = await read(() =>
+    client.readContract({ address: curve, abi: curveAbi, functionName: "creatorTaxBps" }),
+  );
+  const sellable = await read(() =>
+    client.readContract({ address: curve, abi: curveAbi, functionName: "sellableTokens" }),
+  );
+
+  const progress =
+    threshold === 0n ? 0 : Math.min(1, Number((raised * 10_000n) / threshold) / 10_000);
+
   return {
-    address: PONS.factory,
-    abi: factoryAbi,
-    functionName: "createGraduatedPool" as const,
-    args: [TOKEN_CA] as const,
+    phase: launch.phase,
+    raised,
+    threshold,
+    progress,
+    ready,
+    graduated,
+    feeBps,
+    creatorTaxBps,
+    sellable,
+    buybackEnabled: launch.buybackEnabled,
+    creatorFeeRecipient: launch.creatorFeeRecipient,
   };
 }
+
+export async function readBasin(): Promise<BasinState | null> {
+  const basin = asAddr(BASIN_CA);
+  if (!basin) return null;
+  const eth = await read(() => client.getBalance({ address: basin }));
+  const pending = await read(() =>
+    client.readContract({ address: basin, abi: basinAbi, functionName: "pendingEscrow" }),
+  );
+  let locked = 0n;
+  let releasable = 0n;
+  const token = asAddr(TOKEN_CA);
+  if (token) {
+    try {
+      const hoard = await read(() =>
+        client.readContract({ address: basin, abi: basinAbi, functionName: "hoard" }),
+      );
+      locked = hoard[0];
+      releasable = hoard[1];
+    } catch {
+      locked = await read(() =>
+        client.readContract({
+          address: PONS.buybackVault,
+          abi: vaultAbi,
+          functionName: "totalLocked",
+          args: [token],
+        }),
+      );
+    }
+  }
+  return { eth, pending, locked, releasable };
+}
+
+export async function readEscrowOf(addr: Address): Promise<bigint> {
+  return read(() =>
+    client.readContract({
+      address: PONS.feeEscrow,
+      abi: escrowAbi,
+      functionName: "balanceOf",
+      args: [addr],
+    }),
+  );
+}
+
+async function getLogsRetry(params: {
+  address: Address;
+  events: [typeof buyEvent, typeof sellEvent];
+  fromBlock: bigint;
+  toBlock: bigint;
+}): Promise<Log[]> {
+  let wait = 500;
+  for (let i = 0; i < 6; i++) {
+    try {
+      return (await client.getLogs(params)) as unknown as Log[];
+    } catch (err) {
+      if (!isRateLimit(err) || i === 5) throw err;
+      await sleep(wait);
+      wait *= 2;
+    }
+  }
+  return [];
+}
+
+export async function scanNotches(
+  fromBlock: bigint,
+  buyCount: number,
+): Promise<{ notches: Notch[]; scannedTo: bigint }> {
+  if (!isLaunched() || !isAddr(CURVE_CA) || fromBlock === 0n) {
+    return { notches: [], scannedTo: fromBlock };
+  }
+
+  const latest = await read(() => client.getBlockNumber());
+  if (fromBlock > latest) return { notches: [], scannedTo: latest };
+
+  const notches: Notch[] = [];
+  let cursor = fromBlock;
+  let buys = buyCount;
+
+  while (cursor <= latest) {
+    const end = cursor + INDEXER.chunk - 1n > latest ? latest : cursor + INDEXER.chunk - 1n;
+    const logs = await getLogsRetry({
+      address: CURVE_CA,
+      events: [buyEvent, sellEvent],
+      fromBlock: cursor,
+      toBlock: end,
+    });
+
+    for (const log of logs) {
+      const eventName = (log as { eventName?: string }).eventName;
+      const args = (log as { args?: { recipient?: Address; quoteIn?: bigint; quoteOut?: bigint } })
+        .args;
+      const wallet = args?.recipient;
+      if (!wallet) continue;
+      const kind: "buy" | "sell" = eventName === "CurveSell" ? "sell" : "buy";
+      if (kind === "buy") buys += 1;
+      notches.push({
+        kind,
+        wallet,
+        tx: log.transactionHash ?? "0x",
+        logIndex: Number(log.logIndex ?? 0),
+        block: log.blockNumber ?? 0n,
+        index: kind === "buy" ? buys : 0,
+        quote: kind === "buy" ? (args?.quoteIn ?? 0n) : (args?.quoteOut ?? 0n),
+      });
+    }
+
+    cursor = end + 1n;
+  }
+
+  return { notches, scannedTo: latest };
+}
+
+export const factoryWriteAbi = factoryAbi;

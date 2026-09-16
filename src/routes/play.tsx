@@ -1,49 +1,53 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { readLaunchState } from "../lib/pons";
-import { BRAND, isLaunched } from "../lib/site";
+import { Eyebrow, Page } from "@/components/chrome";
+import { useLaunch } from "@/lib/use-launch";
+import { isLaunched } from "@/lib/site";
 
 export const Route = createFileRoute("/play")({ component: Play });
 
-/**
- * The js13k engine is a self-contained single-file build with its own canvas,
- * audio context and rAF loop. It runs in an iframe from /game/index.html rather
- * than being mounted into React: no SSR conflict, no global collisions, and the
- * upstream build stays byte-identical so the MIT credit means something.
- */
 function Play() {
-  const [phase, setPhase] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (!isLaunched()) return;
-    readLaunchState().then((s) => s && setPhase(s.phase)).catch(() => {});
-  }, []);
-
-  const landed = (phase ?? 0) >= 2;
+  const { state } = useLaunch();
+  const open = isLaunched() && (state?.phase ?? 0) >= 2;
 
   return (
-    <main className="max-w-4xl mx-auto px-5 py-10">
-      <header className="flex items-baseline justify-between">
-        <h1 className="text-3xl font-black">Play</h1>
-        <span className="font-mono text-xs opacity-60">
-          {landed ? "the cat is in the pool" : "free to play, scores are cosmetic"}
-        </span>
-      </header>
+    <Page>
+      <section className="mx-auto max-w-5xl px-5 py-10 sm:px-8 sm:py-14">
+        <Eyebrow>Game engine</Eyebrow>
+        <h1 className="mt-3 font-display text-4xl leading-[0.95] tracking-tight sm:text-6xl">
+          Jump. Eat. Grow.
+        </h1>
+        <p className="mt-4 max-w-xl text-lg text-paper/75">
+          The engine is black. The site frames it. Scores stay on this device. Money does not
+          enter the canvas.
+        </p>
 
-      <div className="mt-6 rounded-2xl overflow-hidden border-4 border-ink bg-black">
-        <iframe
-          src="/game/index.html"
-          title="Catapoolt"
-          className="w-full block"
-          style={{ aspectRatio: "4 / 3", border: 0 }}
-          allow="autoplay"
-        />
-      </div>
-
-      <p className="mt-4 font-mono text-xs opacity-60">
-        Scores live in your browser. Nothing here is signed, submitted or rewarded —
-        no keeper, no leaderboard contract, no claim. {BRAND.credit}
-      </p>
-    </main>
+        <div className="mt-10 overflow-hidden rounded-2xl border-2 border-paper/15 bg-night ring-8 ring-raised">
+          <div className="bg-rope px-4 py-2 text-center font-display text-sm tracking-widest text-night">
+            CATAPOOLT
+          </div>
+          {open ? (
+            <iframe
+              title="Catapoolt"
+              src="/game/index.html"
+              className="aspect-[4/3] w-full bg-night"
+            />
+          ) : (
+            <div className="relative aspect-[4/3] w-full overflow-hidden bg-night">
+              <img
+                src="/cat/body.png"
+                alt="The blob cat, mid-leap"
+                className="absolute inset-0 h-full w-full object-contain p-4 sm:p-8"
+              />
+              <p className="absolute inset-x-0 bottom-0 bg-night/80 p-6 text-center font-display text-2xl text-paper sm:p-10 sm:text-4xl">
+                Opens when the cat lands.
+              </p>
+            </div>
+          )}
+        </div>
+        <p className="mt-3 font-mono text-label text-mute">
+          Game engine based on “Catapoolt” by glebv (js13k 2025, MIT). Chain layer original.
+        </p>
+      </section>
+    </Page>
   );
 }

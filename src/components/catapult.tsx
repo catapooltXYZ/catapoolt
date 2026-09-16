@@ -1,89 +1,343 @@
-import { COATS, coatOf, short } from "../lib/site";
-import type { Notch } from "../lib/pons";
+import { coatOf, short } from "@/lib/site";
+import type { Notch } from "@/lib/pons";
+import { Eyebrow } from "@/components/chrome";
 
 /**
- * The arm. progress 0..1 pulls it back from -15deg to -78deg.
- * No canvas, no rAF loop: this moves when the chain moves, 15s poll.
+ * The machine. progress 0..1 pulls the arm from slack to fully wound.
+ * One CSS rotate. Moves when the chain moves — 15s poll, not 60fps.
  */
 export function Catapult({
   progress,
   notches,
   fired = false,
+  waiting = false,
 }: {
   progress: number;
   notches: Notch[];
   fired?: boolean;
+  waiting?: boolean;
 }) {
-  const angle = fired ? 28 : -15 - progress * 63;
-  const riders = notches.filter((n) => n.kind === "buy").slice(-9);
+  const wound = Math.max(0, Math.min(1, progress));
+  const angle = fired ? 34 : -8 - wound * 70;
+  const riders = notches.filter((n) => n.kind === "buy").slice(-8);
+  const ropeX = 300 - 24 - wound * 52;
+  const ropeW = 6 + wound * 6;
 
   return (
-    <div className="relative w-full max-w-3xl mx-auto select-none">
-      <svg viewBox="0 0 800 460" className="w-full h-auto" role="img"
-           aria-label={`Catapult wound to ${Math.round(progress * 100)} percent`}>
+    <div className="relative mx-auto w-full max-w-6xl select-none overflow-hidden rounded-2xl border border-paper/10 bg-night">
+      <svg
+        viewBox="0 0 1100 640"
+        className="h-auto w-full"
+        role="img"
+        aria-label={
+          waiting
+            ? "Catapult at rest. The arm goes up tomorrow."
+            : `Catapult wound to ${Math.round(wound * 100)} percent`
+        }
+      >
         <defs>
-          <linearGradient id="pool" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#12B5C9" stopOpacity="0.9" />
-            <stop offset="100%" stopColor="#0A7A88" stopOpacity="0.95" />
+          <radialGradient id="sky" cx="50%" cy="0%" r="80%">
+            <stop offset="0%" stopColor="var(--color-raised)" />
+            <stop offset="100%" stopColor="var(--color-night)" />
+          </radialGradient>
+          <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--color-paper)" stopOpacity="0.55" />
+            <stop offset="35%" stopColor="var(--color-pool)" />
+            <stop offset="100%" stopColor="var(--color-pool)" stopOpacity="0.7" />
           </linearGradient>
+          <filter id="pool-glow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="10" result="b" />
+            <feMerge>
+              <feMergeNode in="b" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
-        {/* the pool, where the cat lands at graduation */}
-        <rect x="560" y="330" width="220" height="100" rx="14" fill="url(#pool)" />
-        <text x="670" y="452" textAnchor="middle" className="fill-ink/50"
-              fontSize="16" letterSpacing="3">THE POOL</text>
+        <rect width="1100" height="640" fill="url(#sky)" />
 
-        {/* frame */}
-        <path d="M120 400 L200 240 L280 400 Z" fill="none" stroke="#121212" strokeWidth="10"
-              strokeLinejoin="round" />
-        <rect x="90" y="398" width="230" height="12" rx="6" fill="#121212" />
+        <g fill="var(--color-paper)" opacity="0.45">
+          <circle cx="90" cy="48" r="1.4" />
+          <circle cx="210" cy="92" r="1" />
+          <circle cx="380" cy="36" r="1.1" />
+          <circle cx="640" cy="70" r="0.9" />
+          <circle cx="790" cy="40" r="1.3" />
+          <circle cx="980" cy="88" r="1" />
+          <circle cx="1040" cy="30" r="0.8" />
+        </g>
 
-        {/* arm + basket, driven by progress */}
-        <g transform={`rotate(${angle} 200 240)`}
-           style={{ transition: "transform 900ms cubic-bezier(.2,.8,.2,1)" }}>
-          <rect x="192" y="60" width="16" height="185" rx="8" fill="#121212" />
-          <circle cx="200" cy="58" r="26" fill="#FF6A2B" stroke="#121212" strokeWidth="6" />
+        <path
+          d="M0 520 C 180 500, 360 536, 560 518 C 760 500, 920 528, 1100 512 L 1100 640 L 0 640 Z"
+          fill="var(--color-raised)"
+        />
+        <path
+          d="M0 520 C 180 500, 360 536, 560 518 C 760 500, 920 528, 1100 512"
+          fill="none"
+          stroke="var(--color-paper)"
+          strokeWidth="1.5"
+          opacity="0.25"
+        />
+
+        {/* pool */}
+        <ellipse
+          cx="860"
+          cy="508"
+          rx="168"
+          ry="48"
+          fill="var(--color-pool)"
+          opacity="0.18"
+          filter="url(#pool-glow)"
+        />
+        <ellipse cx="860" cy="496" rx="150" ry="38" fill="url(#water)" />
+        <ellipse
+          cx="860"
+          cy="486"
+          rx="118"
+          ry="14"
+          fill="var(--color-paper)"
+          opacity="0.28"
+          className="animate-ripple origin-center"
+          style={{ transformBox: "fill-box", transformOrigin: "center" }}
+        />
+        <text
+          x="860"
+          y="568"
+          textAnchor="middle"
+          fill="var(--color-paper)"
+          opacity="0.45"
+          fontFamily="IBM Plex Mono, ui-monospace, monospace"
+          fontSize="13"
+          letterSpacing="6"
+        >
+          THE POOL
+        </text>
+
+        {/* A-frame — wood beam with cream edge */}
+        <path
+          d="M168 530 L300 200 L432 530"
+          fill="none"
+          stroke="var(--color-wood)"
+          strokeWidth="34"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+        <path
+          d="M168 530 L300 200 L432 530"
+          fill="none"
+          stroke="var(--color-paper)"
+          strokeWidth="5"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+        <path
+          d="M214 400 L386 400"
+          stroke="var(--color-wood)"
+          strokeWidth="16"
+          strokeLinecap="round"
+        />
+        <path
+          d="M214 400 L386 400"
+          stroke="var(--color-paper)"
+          strokeWidth="4"
+          strokeLinecap="round"
+        />
+        <path
+          d="M236 340 L364 340"
+          stroke="var(--color-paper)"
+          strokeWidth="4"
+          strokeLinecap="round"
+          opacity="0.7"
+        />
+        <rect x="148" y="522" width="304" height="18" rx="4" fill="var(--color-wood)" />
+        <rect
+          x="148"
+          y="522"
+          width="304"
+          height="18"
+          rx="4"
+          fill="none"
+          stroke="var(--color-paper)"
+          strokeWidth="3"
+        />
+
+        {/* winch */}
+        <circle cx="300" cy="530" r="22" fill="var(--color-wood)" />
+        <circle
+          cx="300"
+          cy="530"
+          r="22"
+          fill="none"
+          stroke="var(--color-paper)"
+          strokeWidth="4"
+        />
+        <circle cx="300" cy="530" r="7" fill="var(--color-rope)" />
+
+        {/* rope */}
+        <line
+          x1="300"
+          y1="218"
+          x2={ropeX}
+          y2="530"
+          stroke="var(--color-rope)"
+          strokeWidth={ropeW}
+          strokeLinecap="round"
+        />
+
+        {/* arm + basket */}
+        <g
+          style={{
+            transform: `rotate(${angle}deg)`,
+            transformOrigin: "300px 218px",
+            transition: "transform 900ms cubic-bezier(.2,.8,.2,1)",
+          }}
+        >
+          <rect
+            x="289"
+            y="8"
+            width="22"
+            height="220"
+            rx="8"
+            fill="var(--color-wood)"
+            stroke="var(--color-paper)"
+            strokeWidth="4"
+          />
+          <circle cx="300" cy="218" r="18" fill="var(--color-wood)" />
+          <circle
+            cx="300"
+            cy="218"
+            r="18"
+            fill="none"
+            stroke="var(--color-paper)"
+            strokeWidth="5"
+          />
+          <circle cx="300" cy="218" r="5" fill="var(--color-paper)" />
+
+          <ellipse
+            cx="300"
+            cy="4"
+            rx="58"
+            ry="30"
+            fill="var(--color-rope)"
+            stroke="var(--color-paper)"
+            strokeWidth="4"
+          />
+          <ellipse
+            cx="300"
+            cy="-2"
+            rx="42"
+            ry="14"
+            fill="var(--color-night)"
+            stroke="var(--color-paper)"
+            strokeWidth="2.5"
+          />
+
+          {!waiting && !fired && (
+            <image href="/cat/body.png" x="248" y="-70" width="104" height="66" />
+          )}
+
           {riders.map((n, i) => (
-            <circle key={n.tx + i} r="7" cx={200 + (i % 3) * 14 - 14} cy={44 - Math.floor(i / 3) * 14}
-                    fill={coatOf(n.wallet)} stroke="#121212" strokeWidth="2" />
+            <circle
+              key={`${n.tx}:${n.logIndex}`}
+              r="6.5"
+              cx={278 + (i % 4) * 14}
+              cy={-2 - Math.floor(i / 4) * 13}
+              fill={coatOf(n.wallet)}
+              stroke="var(--color-paper)"
+              strokeWidth="1.4"
+            />
           ))}
         </g>
 
-        {/* rope tension */}
-        <line x1="200" y1="240" x2={200 - progress * 40} y2="396"
-              stroke="#FF6A2B" strokeWidth={4 + progress * 4} strokeLinecap="round" />
+        <circle cx="300" cy="218" r="8" fill="var(--color-rope)" />
+        <circle
+          cx="300"
+          cy="218"
+          r="8"
+          fill="none"
+          stroke="var(--color-paper)"
+          strokeWidth="3"
+        />
+
+        {fired && <image href="/cat/body.png" x="720" y="310" width="220" height="138" />}
       </svg>
 
-      <div className="mt-6 flex items-baseline justify-between font-mono text-sm">
-        <span>WIND-UP</span>
-        <span className="text-2xl font-bold">{(progress * 100).toFixed(2)}%</span>
-        <span>LANDING</span>
+      {waiting && (
+        <img
+          src="/cat/face.png"
+          alt=""
+          className="animate-breathe pointer-events-none absolute bottom-8 left-3 w-28 sm:bottom-14 sm:left-10 sm:w-56 lg:w-64"
+        />
+      )}
+    </div>
+  );
+}
+
+export function RopeMeter({ value }: { value: number }) {
+  const pct = Math.max(0, Math.min(100, value * 100));
+  return (
+    <div className="w-full">
+      <div className="mb-2 flex items-baseline justify-between gap-3">
+        <Eyebrow>Tension</Eyebrow>
+        <span className="font-display text-3xl tabular-nums leading-none sm:text-4xl">
+          {pct.toFixed(2)}
+          <span className="text-xl text-mute">%</span>
+        </span>
       </div>
-      <div className="mt-2 h-2 w-full bg-ink/10 rounded-full overflow-hidden">
-        <div className="h-full bg-[#FF6A2B] transition-[width] duration-700"
-             style={{ width: `${Math.min(100, progress * 100)}%` }} />
+      <div className="h-2 overflow-hidden rounded-full bg-raised">
+        <div
+          className="h-full rounded-full bg-rope transition-[width] duration-500 ease-out"
+          style={{ width: `${pct}%` }}
+        />
       </div>
     </div>
   );
 }
 
-/** Founding Fifty strip. Cosmetic. No promise attached to it, ever. */
-export function NotchWall({ notches }: { notches: Notch[] }) {
-  const buys = notches.filter((n) => n.kind === "buy").slice(0, 50);
-  if (buys.length === 0) {
-    return <p className="font-mono text-sm opacity-60">No notches yet. The arm is slack.</p>;
-  }
+function CoatCat({ color, label }: { color: string; label: string }) {
   return (
-    <ol className="grid grid-cols-2 sm:grid-cols-5 gap-2 font-mono text-xs">
-      {buys.map((n) => (
-        <li key={n.tx} className="flex items-center gap-2 border border-ink/15 rounded px-2 py-1">
-          <span className="w-3 h-3 rounded-full shrink-0" style={{ background: coatOf(n.wallet) }} />
-          <span className="opacity-50">#{n.index}</span>
-          <span>{short(n.wallet)}</span>
-        </li>
-      ))}
-    </ol>
+    <svg viewBox="0 0 32 32" className="h-full w-full p-0.5" aria-label={label}>
+      <polygon points="8,14 11,4 16,14" fill={color} />
+      <polygon points="24,14 21,4 16,14" fill={color} />
+      <ellipse cx="16" cy="20" rx="10" ry="9" fill={color} />
+      <rect x="11" y="16" width="2.5" height="5" rx="1" fill="var(--color-eye)" />
+      <rect x="18.5" y="16" width="2.5" height="5" rx="1" fill="var(--color-eye)" />
+    </svg>
   );
 }
 
-export const COAT_COUNT = COATS.length;
+export function NotchWall({ notches }: { notches: Notch[] }) {
+  const buys = notches.filter((n) => n.kind === "buy").slice(0, 50);
+  return (
+    <div>
+      <div className="mb-4 flex items-end justify-between gap-4">
+        <h2 className="font-mono text-label uppercase tracking-wide-label text-mute">
+          The Founding Fifty
+        </h2>
+        <p className="font-mono text-label tabular-nums text-mute">{buys.length} / 50</p>
+      </div>
+      <ol className="grid grid-cols-5 gap-1.5 sm:grid-cols-10 sm:gap-2">
+        {Array.from({ length: 50 }, (_, i) => {
+          const n = buys[i];
+          return (
+            <li
+              key={n ? `${n.tx}:${n.logIndex}` : `seat-${i}`}
+              className="aspect-square rounded-md border border-paper/10 bg-raised"
+              title={n ? `${short(n.wallet)} · #${n.index}` : `Seat ${i + 1}`}
+            >
+              {n ? (
+                <CoatCat color={coatOf(n.wallet)} label={short(n.wallet)} />
+              ) : (
+                <span className="grid h-full place-items-center font-mono text-label text-mute/30">
+                  {i + 1}
+                </span>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+      <p className="mt-3 font-mono text-label text-mute">
+        Cosmetic. First fifty buyers on the curve. Not a promise, not a payout.
+      </p>
+    </div>
+  );
+}

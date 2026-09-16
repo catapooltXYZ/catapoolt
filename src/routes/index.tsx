@@ -1,99 +1,100 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { formatEther } from "viem";
-import { Catapult, NotchWall } from "../components/catapult";
-import { readLaunchState, scanNotches, type LaunchState, type Notch } from "../lib/pons";
-import { BRAND, TOKEN_CA, LAUNCH_BLOCK, INDEXER, isLaunched, ponsToken, short } from "../lib/site";
+import { Catapult, NotchWall, RopeMeter } from "@/components/catapult";
+import { Btn, Eyebrow, Page } from "@/components/chrome";
+import { useLaunch } from "@/lib/use-launch";
+import { BRAND, TOKEN_CA, isLaunched, ponsToken, short } from "@/lib/site";
 
 export const Route = createFileRoute("/")({ component: Home });
 
 function Home() {
-  const [state, setState] = useState<LaunchState | null>(null);
-  const [notches, setNotches] = useState<Notch[]>([]);
-
-  useEffect(() => {
-    if (!isLaunched()) return;
-    let alive = true;
-    let cursor = LAUNCH_BLOCK;
-
-    const tick = async () => {
-      try {
-        const s = await readLaunchState();
-        if (alive && s) setState(s);
-        const { notches: fresh, scannedTo } = await scanNotches(cursor, notches.filter(n => n.kind === "buy").length);
-        if (alive && fresh.length) setNotches((prev) => [...prev, ...fresh]);
-        cursor = scannedTo + 1n;
-      } catch {
-        /* keep the last good set on screen — never fall back to a demo tape */
-      }
-    };
-
-    tick();
-    const id = setInterval(tick, INDEXER.pollMs);
-    return () => { alive = false; clearInterval(id); };
-  }, []);
-
+  const { state, notches, stale } = useLaunch();
+  const launched = isLaunched();
   const progress = state?.progress ?? 0;
   const landed = (state?.phase ?? 0) >= 2;
+  const needsFinish = Boolean(state?.ready && (state?.phase ?? 0) < 2);
 
   return (
-    <main className="min-h-screen bg-paper text-ink px-5 py-10">
-      <section className="max-w-3xl mx-auto text-center">
-        <h1 className="text-5xl sm:text-7xl font-black tracking-tight">CATAPOOLT</h1>
-        <p className="mt-3 text-xl">{BRAND.line}</p>
-        <p className="mt-1 opacity-60">{BRAND.sub}</p>
+    <Page>
+      <section className="mx-auto max-w-6xl px-5 pt-8 sm:px-8 sm:pt-10">
+        <div className="flex flex-wrap items-center gap-3">
+          <Eyebrow>
+            ${BRAND.ticker} · Robinhood Chain
+          </Eyebrow>
+          {!launched && (
+            <span className="rounded-full bg-paper px-3 py-1 font-mono text-label uppercase tracking-wide-label text-night">
+              T-24
+            </span>
+          )}
+        </div>
+        <h1 className="mt-3 max-w-4xl font-display text-4xl leading-[0.92] tracking-tight sm:text-6xl lg:text-7xl">
+          {launched
+            ? landed
+              ? "The cat landed."
+              : "Watch the arm."
+            : "The arm goes up tomorrow."}
+        </h1>
+        <p className="mt-4 max-w-xl text-lg text-paper/80 sm:text-xl">{BRAND.line}</p>
+        <p className="mt-1 max-w-xl text-mute">{BRAND.sub}</p>
       </section>
 
-      <section className="mt-12">
-        <Catapult progress={progress} notches={notches} fired={landed} />
+      <section className="mx-auto mt-6 w-full max-w-6xl px-5 sm:mt-8 sm:px-8">
+        <Catapult
+          progress={progress}
+          notches={notches}
+          fired={landed}
+          waiting={!launched}
+        />
       </section>
 
-      <section className="max-w-3xl mx-auto mt-10 grid sm:grid-cols-3 gap-4 font-mono text-sm">
-        <Stat label="RAISED" value={state ? `${formatEther(state.raised)} ETH` : "—"} />
-        <Stat label="TARGET" value={state ? `${formatEther(state.threshold)} ETH` : "—"} />
-        <Stat label="TRADE COST"
-              value={state ? `${Number(state.feeBps + state.creatorTaxBps) / 100}%` : "—"} />
+      <section className="mx-auto mt-8 grid w-full max-w-6xl gap-8 px-5 sm:grid-cols-12 sm:px-8">
+        <div className="sm:col-span-7">
+          <RopeMeter value={progress} />
+          {launched && state ? (
+            <>
+              <p className="mt-3 font-mono text-sm text-mute">
+                {formatEther(state.raised)} / {formatEther(state.threshold)} ETH on the curve
+                {stale ? " · last good read" : ""}
+              </p>
+              <p className="mt-1 font-mono text-sm text-paper/70">
+                Trade cost {(Number(state.feeBps + state.creatorTaxBps) / 100).toFixed(2)}% ·
+                first 5 seconds carry a protocol anti-snipe tax.
+              </p>
+            </>
+          ) : (
+            <p className="mt-3 max-w-md font-mono text-sm leading-relaxed text-mute">
+              Token not live. No CA to copy. When the curve opens, every buy pulls this arm
+              back. Graduation is the cat leaving the basket.
+            </p>
+          )}
+        </div>
+        <div className="flex flex-col justify-end gap-3 sm:col-span-5">
+          {launched ? (
+            <>
+              <Btn href={ponsToken(TOKEN_CA)} className="w-full">
+                {landed ? "Trade the pool" : "Wind the arm — buy on pons"}
+              </Btn>
+              {needsFinish && (
+                <Link
+                  to="/landing"
+                  className="grid min-h-12 place-items-center rounded-lg border border-paper/20 px-6 font-mono text-label uppercase tracking-wide-label text-paper transition-colors hover:border-rope hover:text-rope"
+                >
+                  Finish the launch
+                </Link>
+              )}
+              <p className="font-mono text-label text-mute">CA {short(TOKEN_CA)}</p>
+            </>
+          ) : (
+            <div className="rounded-lg border border-dashed border-paper/20 px-5 py-4 font-mono text-sm text-mute">
+              CA pending · the arm is slack
+            </div>
+          )}
+        </div>
       </section>
 
-      <section className="max-w-3xl mx-auto mt-10">
-        {isLaunched() ? (
-          <a href={ponsToken(TOKEN_CA)} target="_blank" rel="noreferrer"
-             className="block text-center bg-ink text-paper rounded-xl py-4 font-bold">
-            {landed ? "Trade on the pool" : "Wind the arm — buy on pons"}
-          </a>
-        ) : (
-          <div className="text-center border border-dashed border-ink/30 rounded-xl py-4 font-mono">
-            CA pending. The arm goes up soon.
-          </div>
-        )}
-      </section>
-
-      <section className="max-w-3xl mx-auto mt-12">
-        <h2 className="font-mono text-sm tracking-widest opacity-60 mb-3">THE FOUNDING FIFTY</h2>
+      <section className="mx-auto mt-14 w-full max-w-6xl px-5 sm:px-8">
         <NotchWall notches={notches} />
       </section>
-
-      {isLaunched() && (
-        <p className="max-w-3xl mx-auto mt-10 font-mono text-xs opacity-60 text-center">
-          CA {short(TOKEN_CA)} · the first 5 seconds of a pons launch carry a protocol
-          anti-snipe tax on buys. It decays to zero.
-        </p>
-      )}
-
-      <footer className="max-w-3xl mx-auto mt-16 border-t border-ink/15 pt-6
-                         font-mono text-xs opacity-60 space-y-1 text-center">
-        <p>{BRAND.credit}</p>
-        <p>{BRAND.disclaimer}</p>
-      </footer>
-    </main>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="border border-ink/15 rounded-xl px-4 py-3">
-      <div className="opacity-50 text-xs tracking-widest">{label}</div>
-      <div className="text-lg font-bold">{value}</div>
-    </div>
+    </Page>
   );
 }

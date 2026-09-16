@@ -1,85 +1,95 @@
-import { CHAIN } from "./site";
+import { createWalletClient, custom, type Address } from "viem";
+import { basinAbi, factoryWriteAbi, robinhood } from "./pons";
+import { BASIN_CA, CHAIN_ID, PONS, TOKEN_CA, URLS, asAddr, explorerAddress } from "./site";
 
-// Minimal wallet layer. EIP-6963 first, injected fallback.
-// No wagmi, no walletconnect: one chain, one button, sequential calls only.
-
-type Eip1193 = {
-  request: (a: { method: string; params?: unknown[] }) => Promise<unknown>;
-  on?: (e: string, cb: (...a: unknown[]) => void) => void;
+type Eth = {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
 };
 
-let provider: Eip1193 | null = null;
-
-export function discoverProviders(): Promise<Eip1193[]> {
-  return new Promise((resolve) => {
-    const found: Eip1193[] = [];
-    const onAnnounce = (e: Event) => {
-      const detail = (e as CustomEvent).detail as { provider: Eip1193 };
-      if (detail?.provider && !found.includes(detail.provider)) found.push(detail.provider);
-    };
-    window.addEventListener("eip6963:announceProvider", onAnnounce);
-    window.dispatchEvent(new Event("eip6963:requestProvider"));
-    setTimeout(() => {
-      window.removeEventListener("eip6963:announceProvider", onAnnounce);
-      const injected = (window as unknown as { ethereum?: Eip1193 }).ethereum;
-      if (found.length === 0 && injected) found.push(injected);
-      resolve(found);
-    }, 150);
-  });
+function getEth(): Eth | null {
+  if (typeof window === "undefined") return null;
+  const eth = (window as unknown as { ethereum?: Eth }).ethereum;
+  return eth ?? null;
 }
 
-export async function connect(): Promise<`0x${string}`> {
-  const [first] = await discoverProviders();
-  if (!first) throw new Error("No wallet found. Install MetaMask or OKX.");
-  provider = first;
-
-  const accounts = (await provider.request({ method: "eth_requestAccounts" })) as string[];
-  await ensureChain();
-  return accounts[0] as `0x${string}`;
-}
-
-/// Adds Robinhood Chain if missing. Skips the switch when already on 4663 —
-/// some wallets throw on a redundant wallet_switchEthereumChain.
-async function ensureChain() {
-  if (!provider) throw new Error("not connected");
-  const current = (await provider.request({ method: "eth_chainId" })) as string;
-  if (current?.toLowerCase() === CHAIN.hex) return;
-
+async function ensureChain(eth: Eth): Promise<void> {
+  const hex = `0x${CHAIN_ID.toString(16)}`;
+  const current = String(await eth.request({ method: "eth_chainId" }));
+  if (current.toLowerCase() === hex.toLowerCase()) return;
   try {
-    await provider.request({
+    await eth.request({
       method: "wallet_switchEthereumChain",
-      params: [{ chainId: CHAIN.hex }],
+      params: [{ chainId: hex }],
     });
   } catch {
-    await provider.request({
+    await eth.request({
       method: "wallet_addEthereumChain",
-      params: [{
-        chainId: CHAIN.hex,
-        chainName: CHAIN.name,
-        rpcUrls: [CHAIN.rpc],
-        nativeCurrency: CHAIN.nativeCurrency,
-        blockExplorerUrls: [CHAIN.explorer],
-      }],
+      params: [
+        {
+          chainId: hex,
+          chainName: "Robinhood Chain",
+          nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+          rpcUrls: [URLS.rpc],
+          blockExplorerUrls: [URLS.explorer],
+        },
+      ],
     });
   }
 }
 
-/// One transaction at a time. This RPC rejects batched JSON-RPC.
-export async function sendTx(to: `0x${string}`, data: `0x${string}`, value = "0x0") {
-  if (!provider) await connect();
-  const from = ((await provider!.request({ method: "eth_accounts" })) as string[])[0];
-  if (!from) throw new Error("no account");
-  await ensureChain();
-  return (await provider!.request({
-    method: "eth_sendTransaction",
-    params: [{ from, to, data, value }],
-  })) as `0x${string}`;
+async function connect(): Promise<{ account: Address; eth: Eth }> {
+  const eth = getEth();
+  if (!eth) throw new Error("NO_WALLET");
+  await ensureChain(eth);
+  const accounts = (await eth.request({ method: "eth_requestAccounts" })) as string[];
+  const account = accounts[0] as Address | undefined;
+  if (!account) throw new Error("NO_ACCOUNT");
+  return { account, eth };
 }
 
-export async function currentAccount(): Promise<`0x${string}` | null> {
-  const [first] = await discoverProviders();
-  if (!first) return null;
-  provider = first;
-  const accounts = (await first.request({ method: "eth_accounts" })) as string[];
-  return (accounts[0] as `0x${string}`) ?? null;
+export function hasWallet(): boolean {
+  return Boolean(getEth());
+}
+
+export async function harvestBasin(): Promise<`0x${string}`> {
+  const basin = asAddr(BASIN_CA);
+  if (!basin) throw new Error("NO_BASIN");
+  const { account, eth } = await connect();
+  const wallet = createWalletClient({
+    account,
+    chain: robinhood,
+    transport: custom(eth),
+  });
+  return wallet.writeContract({
+    address: basin,
+    abi: basinAbi,
+    functionName: "harvest",
+    account,
+    chain: robinhood,
+  });
+}
+
+export async function finishLaunch(): Promise<`0x${string}`> {
+  const token = asAddr(TOKEN_CA);
+  if (!token) throw new Error("NO_TOKEN");
+  const { account, eth } = await connect();
+  const wallet = createWalletClient({
+    account,
+    chain: robinhood,
+    transport: custom(eth),
+  });
+  return wallet.writeContract({
+    address: PONS.factory,
+    abi: factoryWriteAbi,
+    functionName: "createGraduatedPool",
+    args: [token],
+    account,
+    chain: robinhood,
+  });
+}
+
+export function basinWriteUrl(): string {
+  const basin = asAddr(BASIN_CA);
+  if (!basin) return URLS.explorer;
+  return `${explorerAddress(basin)}#writeContract`;
 }

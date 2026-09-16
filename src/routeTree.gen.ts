@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as BasinRouteImport } from './routes/basin'
 import { Route as HowRouteImport } from './routes/how'
+import { Route as LandingRouteImport } from './routes/landing'
 import { Route as PlayRouteImport } from './routes/play'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const HowRoute = HowRouteImport.update({
   path: '/how',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LandingRoute = LandingRouteImport.update({
+  id: '/landing',
+  path: '/landing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlayRoute = PlayRouteImport.update({
   id: '/play',
   path: '/play',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/basin': typeof BasinRoute
   '/how': typeof HowRoute
+  '/landing': typeof LandingRoute
   '/play': typeof PlayRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/basin': typeof BasinRoute
   '/how': typeof HowRoute
+  '/landing': typeof LandingRoute
   '/play': typeof PlayRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/basin': typeof BasinRoute
   '/how': typeof HowRoute
+  '/landing': typeof LandingRoute
   '/play': typeof PlayRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/basin' | '/how' | '/play'
+  fullPaths: '/' | '/basin' | '/how' | '/landing' | '/play'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/basin' | '/how' | '/play'
-  id: '__root__' | '/' | '/basin' | '/how' | '/play'
+  to: '/' | '/basin' | '/how' | '/landing' | '/play'
+  id: '__root__' | '/' | '/basin' | '/how' | '/landing' | '/play'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BasinRoute: typeof BasinRoute
   HowRoute: typeof HowRoute
+  LandingRoute: typeof LandingRoute
   PlayRoute: typeof PlayRoute
 }
 
@@ -92,6 +102,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HowRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/landing': {
+      id: '/landing'
+      path: '/landing'
+      fullPath: '/landing'
+      preLoaderRoute: typeof LandingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/play': {
       id: '/play'
       path: '/play'
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BasinRoute: BasinRoute,
   HowRoute: HowRoute,
+  LandingRoute: LandingRoute,
   PlayRoute: PlayRoute,
 }
 export const routeTree = rootRouteImport

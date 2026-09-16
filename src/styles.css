@@ -313,6 +313,58 @@
     4px 4px 0 var(--color-ink);
 }
 
+.ca-box {
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  box-shadow:
+    0 0 0 4px var(--color-ink),
+    8px 8px 0 rgb(0 0 0 / 0.35);
+  font-family: var(--font-display);
+  font-size: 10px;
+  line-height: 1.4;
+  text-align: left;
+}
+.ca-box-lbl {
+  flex: none;
+  display: grid;
+  place-items: center;
+  padding: 0 14px;
+  background: var(--color-gold);
+  color: var(--color-ink);
+  font-size: 12px;
+}
+.ca-box-val {
+  flex: 1;
+  min-width: 0;
+  padding: 14px 12px;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  letter-spacing: 0.02em;
+}
+.ca-box-btn {
+  flex: none;
+  min-width: 4.8rem;
+  border: 0;
+  background: var(--color-chart);
+  color: var(--color-paper);
+  padding: 0 16px;
+  font-family: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+.ca-box-btn.is-live {
+  background: var(--color-buy);
+}
+.ca-box-btn.is-live:hover {
+  background: var(--color-grass);
+}
+.ca-box-btn:disabled {
+  cursor: default;
+}
+
 .pixel-title {
   color: var(--color-gold);
   text-shadow:

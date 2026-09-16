@@ -67,14 +67,14 @@ function CaBar() {
   };
 
   return (
-    <div className="mt-5 flex min-h-11 items-center gap-0 bg-ink font-display text-label text-paper">
-      <span className="px-3 py-3 text-gold">CA</span>
-      <span className="px-3 py-3 tracking-wide">{launched ? short(TOKEN_CA) : "pending"}</span>
+    <div className="ca-box mt-6 w-full max-w-xl">
+      <span className="ca-box-lbl">CA</span>
+      <span className="ca-box-val">{launched ? TOKEN_CA : "pending"}</span>
       <button
         type="button"
         onClick={onCopy}
         disabled={!launched}
-        className={`px-4 py-3 ${launched ? "bg-buy hover:bg-grass" : "bg-chart"}`}
+        className={`ca-box-btn ${launched ? "is-live" : ""}`}
       >
         {launched ? (copied ? "COPIED" : "COPY") : "T-24"}
       </button>
@@ -112,6 +112,8 @@ export function World({
           Mice pile in. The fish is the pool.
         </p>
 
+        <CaBar />
+
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           {launched ? (
             <Btn href={ponsToken(TOKEN_CA)}>Buy $POOLT</Btn>
@@ -130,9 +132,9 @@ export function World({
             Play
           </Link>
         </div>
-
-        <CaBar />
-        <p className="mt-3 font-display text-label text-ink/60">Tap the cat, the mice, the fish.</p>
+        <p className="mt-3 font-display text-label text-paper/80" style={{ textShadow: "2px 2px 0 #1a1410" }}>
+          Tap the cat, the mice, the fish.
+        </p>
       </div>
 
       <Actors progress={progress} fired={fired} waiting={waiting} focus="watch" />

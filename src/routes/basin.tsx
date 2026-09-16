@@ -62,9 +62,9 @@ function BasinPage() {
               style={{ height: `${Math.round(water * 100)}%` }}
             />
             <img
-              src="/cast/fish.png"
+              src="/sprites/fish-a.png"
               alt=""
-              className="animate-bob absolute right-3 top-3 w-20 sm:w-28"
+              className="spr animate-bob absolute right-3 top-3 w-20 sm:w-28"
             />
             <div className="relative z-10 flex h-full flex-col justify-between p-5">
               <Eyebrow>Cistern</Eyebrow>

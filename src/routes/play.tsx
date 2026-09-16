@@ -23,7 +23,7 @@ function Play() {
         focus="play"
       >
         <p className="max-w-xl font-sans text-base text-ink/80 sm:text-lg">
-          The engine is black. The meadow frames it. Scores stay on this device. Money does not
+          The engine is black. The grass frames it. Scores stay on this device. Money does not
           enter the canvas.
         </p>
 
@@ -35,12 +35,12 @@ function Play() {
             <iframe title="Catapoolt" src="/game/index.html" className="aspect-[4/3] w-full bg-ink" />
           ) : (
             <div className="relative aspect-[4/3] w-full overflow-hidden bg-sky">
-              <div className="grass-field absolute inset-x-0 bottom-0 h-[42%]" />
-              <div className="absolute inset-x-0 bottom-0 h-6 bg-dirt" />
+              <div className="mc-grass absolute inset-x-0 bottom-0 h-8" />
+              <div className="dirt-bar absolute inset-x-0 bottom-0 h-6" />
               <img
-                src="/cast/cat.png"
+                src="/sprites/cat-a.png"
                 alt=""
-                className="animate-bob absolute bottom-[10%] left-[10%] w-[32%] max-w-40"
+                className="spr animate-bob absolute bottom-[12%] left-[10%] w-[28%] max-w-32"
               />
               <p className="absolute inset-x-0 bottom-0 bg-ink/80 p-5 text-center font-display text-sm leading-relaxed text-paper sm:p-8 sm:text-lg">
                 Opens when the cat lands.

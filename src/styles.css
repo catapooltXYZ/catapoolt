@@ -1,15 +1,19 @@
 @import "tailwindcss";
 
 @theme {
-  --color-sky: #bfe9ff;
-  --color-sky-deep: #7ec8ea;
-  --color-grass: #4fa64a;
-  --color-grass-dark: #2f7a36;
+  --color-sky: #8fd4ff;
+  --color-sky-deep: #6ebcec;
+  --color-grass: #54c247;
+  --color-grass-dark: #3a9e34;
   --color-dirt: #8b5a2b;
+  --color-dirt-dark: #6b3f1a;
   --color-wood: #c48a3a;
   --color-ink: #1a1410;
   --color-paper: #fff7e6;
   --color-rope: #e85d04;
+  --color-gold: #f2d44a;
+  --color-buy: #3d9b3a;
+  --color-chart: #5c5c5c;
   --color-pool: #3ec6d8;
   --color-mute: #3d5c40;
   --color-eye: #8cff2a;
@@ -22,7 +26,13 @@
   --animate-bob: bob 2.6s ease-in-out infinite;
   --animate-scurry: scurry 18s linear infinite;
   --animate-cloud: cloud 48s linear infinite;
-  --animate-ripple: ripple 3.2s ease-in-out infinite;
+  --animate-frame: frame 0.36s steps(1) infinite;
+  --animate-marquee: marquee 28s linear infinite;
+  --animate-patrol: patrol 22s linear infinite;
+  --animate-pigwalk: pigwalk 16s linear infinite;
+  --animate-swim: swim 14s linear infinite;
+  --marquee-h: 2.85rem;
+  --ground-h: 2.85rem;
 }
 
 @keyframes scurry {
@@ -43,13 +53,58 @@
   }
 }
 
+@keyframes patrol {
+  0% {
+    transform: translateX(0) scaleX(1);
+  }
+  46% {
+    transform: translateX(28vw) scaleX(1);
+  }
+  50% {
+    transform: translateX(28vw) scaleX(-1);
+  }
+  96% {
+    transform: translateX(0) scaleX(-1);
+  }
+  100% {
+    transform: translateX(0) scaleX(1);
+  }
+}
+
+@keyframes pigwalk {
+  0% {
+    transform: translateX(-4vw) scaleX(-1);
+  }
+  100% {
+    transform: translateX(-88vw) scaleX(-1);
+  }
+}
+
+@keyframes swim {
+  0% {
+    transform: translateX(0) scaleX(1);
+  }
+  48% {
+    transform: translateX(-22vw) scaleX(1);
+  }
+  50% {
+    transform: translateX(-22vw) scaleX(-1);
+  }
+  98% {
+    transform: translateX(0) scaleX(-1);
+  }
+  100% {
+    transform: translateX(0) scaleX(1);
+  }
+}
+
 @keyframes bob {
   0%,
   100% {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-12px);
+    transform: translateY(-8px);
   }
 }
 
@@ -62,15 +117,23 @@
   }
 }
 
-@keyframes ripple {
+@keyframes frame {
   0%,
-  100% {
-    transform: scaleX(1);
-    opacity: 0.35;
+  49% {
+    opacity: 0;
   }
-  50% {
-    transform: scaleX(1.08);
-    opacity: 0.55;
+  50%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
   }
 }
 
@@ -79,7 +142,7 @@
     transform: scale(1) translateY(0);
   }
   40% {
-    transform: scale(1.12) translateY(-22px);
+    transform: scale(1.12) translateY(-18px);
   }
   100% {
     transform: scale(1) translateY(0);
@@ -88,8 +151,8 @@
 
 @layer base {
   html {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: unset;
   }
 
   html,
@@ -98,6 +161,8 @@
     min-height: 100%;
     background: var(--color-sky);
     color: var(--color-ink);
+    --marquee-h: 2.85rem;
+    --ground-h: 2.85rem;
   }
 
   body {
@@ -125,9 +190,18 @@
   .animate-bob,
   .animate-scurry,
   .animate-cloud,
-  .animate-ripple {
+  .animate-frame,
+  .animate-marquee,
+  .animate-patrol,
+  .animate-pigwalk,
+  .animate-swim {
     animation: none !important;
   }
+}
+
+.spr {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .pixel-border {
@@ -137,7 +211,7 @@
 }
 
 .pixel-title {
-  color: var(--color-rope);
+  color: var(--color-gold);
   text-shadow:
     3px 0 var(--color-ink),
     -3px 0 var(--color-ink),
@@ -149,16 +223,28 @@
     -3px -3px var(--color-ink);
 }
 
-.grass-field {
-  background-color: var(--color-grass);
-  background-image:
-    linear-gradient(var(--color-grass-dark) 0 10px, transparent 10px),
-    repeating-linear-gradient(
-      90deg,
-      var(--color-grass) 0 28px,
-      #58b052 28px 56px
-    );
-  background-size: 100% 100%, 56px 56px;
+.dirt-bar {
+  background-color: var(--color-dirt);
+  background-image: url("/sprites/dirt.png");
+  background-repeat: repeat;
+  background-size: 32px 32px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.mc-grass {
+  background-image: url("/sprites/grass.png");
+  background-repeat: repeat-x;
+  background-size: 32px 32px;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.mc-btn {
+  box-shadow:
+    0 0 0 4px var(--color-ink),
+    inset 3px 3px 0 rgb(255 255 255 / 0.22),
+    inset -3px -3px 0 rgb(0 0 0 / 0.28);
 }
 
 .spook {

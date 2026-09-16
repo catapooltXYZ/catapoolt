@@ -34,22 +34,22 @@ function How() {
             n="01"
             title="The wind-up"
             body="Every buy pulls the arm back. The first fifty buyers sit as mice on the wall — cosmetic, never a payout."
-            art="/cast/mouse.png"
-            artAlt="A voxel mouse"
+            art="/sprites/mouse-a.png"
+            artAlt="A pixel mouse"
           />
           <Phase
             n="02"
             title="The landing"
             body="When the curve sells out, pons builds a locked Uniswap v4 pool. That instant is the cat leaving the basket for the fish."
-            art="/cast/cat.png"
-            artAlt="The voxel cat"
+            art="/sprites/cat-a.png"
+            artAlt="The pixel cat"
           />
           <Phase
             n="03"
             title="The pool"
             body="The js13k game opens. Jump, eat, grow. Scores stay on the device. Buybacks vest five years. No claim button."
-            art="/cast/fish.png"
-            artAlt="The voxel fish"
+            art="/sprites/fish-a.png"
+            artAlt="The pixel fish"
           />
         </ol>
 
@@ -113,7 +113,7 @@ function Phase({
     <li>
       <Panel className="flex h-full flex-col">
         <div className="mb-4 grid h-36 place-items-center overflow-hidden rounded-sm bg-sky">
-          <img src={art} alt={artAlt} className="max-h-32 w-auto" />
+          <img src={art} alt={artAlt} className="spr max-h-32 w-auto" />
         </div>
         <p className="font-display text-label text-rope">{n}</p>
         <h3 className="mt-1 font-display text-sm leading-snug sm:text-base">{title}</h3>

@@ -11,7 +11,7 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: `${BRAND.name} — ${BRAND.line}` },
       { name: "description", content: `${BRAND.line} ${BRAND.sub}` },
-      { name: "theme-color", content: "#BFE9FF" },
+      { name: "theme-color", content: "#8FD4FF" },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
@@ -31,7 +31,7 @@ export const Route = createRootRoute({
 
 function RootDocument() {
   return (
-    <html lang="en" className="antialiased" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>

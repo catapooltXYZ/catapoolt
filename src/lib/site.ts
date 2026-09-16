@@ -9,7 +9,7 @@ export const BRAND = {
 
 export const URLS = {
   site: "https://www.catapoolt.xyz",
-  x: "https://x.com/catapooltXYZ",
+  x: "https://x.com/CatapooltRH",
   github: "https://github.com/catapooltXYZ/catapoolt",
   ponsDocs: "https://docs.ponsfamily.com/v2",
   explorer: "https://robinhoodchain.blockscout.com",

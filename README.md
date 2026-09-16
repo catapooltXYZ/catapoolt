@@ -3,7 +3,7 @@
 **The curve is the catapult.** Every buy winds it. The mice pile in. The fish is the pool.
 
 - Site: [www.catapoolt.xyz](https://www.catapoolt.xyz)
-- X: [@catapooltXYZ](https://x.com/catapooltXYZ)
+- X: [@CatapooltRH](https://x.com/CatapooltRH)
 - Chain: Robinhood Chain `4663`
 - Pad: pons v2 (not letscash)
 - Ticker: `$POOLT`

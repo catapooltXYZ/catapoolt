@@ -40,7 +40,7 @@ contract Basin {
     string public constant DESCRIPTION =
         "Every buy winds the catapult. When the curve sells out the cat flies into a locked pool. Game engine by glebv (js13k, MIT).";
     string public constant WEBSITE = "https://www.catapoolt.xyz";
-    string public constant TWITTER = "https://x.com/catapooltXYZ";
+    string public constant TWITTER = "https://x.com/CatapooltRH";
     string public constant GITHUB  = "https://github.com/catapooltXYZ/catapoolt";
 
     IFeeEscrow    public constant ESCROW  = IFeeEscrow(0xd3AFEB2a57f70eF218Aa82451c51B2fb0416Ac9e);

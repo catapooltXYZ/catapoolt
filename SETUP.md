@@ -6,7 +6,9 @@ Canonical URL: `https://www.catapoolt.xyz` (apex 308 → www).
 
 ## Blocker
 
-`canLaunch(OPS)` must be true. Public launch is closed until whitelist. Mail contact@ponsfamily.com.
+Public launching is currently **open** (`launchEnabled()` = true on the factory). Still read `canLaunch(OPS)` before `launchToken`. If it reverts `NotWhitelisted`, mail contact@ponsfamily.com.
+
+Config `0`: 1B supply, curve fee 100 bps, graduation 4.2 ETH, tick spacing 200, enabled.
 
 ## Order (do not skip, do not reorder)
 
@@ -34,8 +36,16 @@ Creator fee recipient starts as the OPS EOA. Hand over to Basin only after a liv
 
 - Solidity `0.8.24`, optimizer 200, EVM cancun.
 - Constructor `ops_` = OPS EOA (only `pull` and `handOver`).
-- Verify on Blockscout (single file, MIT), read `socials()`.
-- Confirm escrow `0xd3AFEB2a57f70eF218Aa82451c51B2fb0416Ac9e` and factory `0x7eD598BcEf8bd9Edd8C97A195C6d13f40801EC7e` expose `claim()`, `claimToken(address)`, `balanceOf(address)`, `transferCreatorFeeRecipient(address,address)`.
+- Deploy from the Pond page (connect OPS wallet) or:
+
+```
+forge create contracts/Basin.sol:Basin \
+  --rpc-url https://rpc.mainnet.chain.robinhood.com \
+  --broadcast --evm-version cancun --optimizer-runs 200 \
+  --constructor-args $OPS
+```
+
+Do not paste a private key in chat. Verify on Blockscout (single file, MIT), read `socials()`.
 
 ## Site constants
 

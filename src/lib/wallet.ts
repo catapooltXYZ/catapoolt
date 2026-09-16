@@ -1,4 +1,5 @@
-import { createWalletClient, custom, type Address } from "viem";
+import { createPublicClient, createWalletClient, custom, parseAbi, type Address } from "viem";
+import { BASIN_BYTECODE } from "./basin-artifact";
 import { basinAbi, factoryWriteAbi, robinhood } from "./pons";
 import { BASIN_CA, CHAIN_ID, PONS, TOKEN_CA, URLS, asAddr, explorerAddress } from "./site";
 
@@ -49,6 +50,31 @@ async function connect(): Promise<{ account: Address; eth: Eth }> {
 
 export function hasWallet(): boolean {
   return Boolean(getEth());
+}
+
+export async function deployBasin(): Promise<{ hash: `0x${string}`; address: Address }> {
+  if (asAddr(BASIN_CA)) throw new Error("BASIN_ALREADY_SET");
+  const { account, eth } = await connect();
+  const wallet = createWalletClient({
+    account,
+    chain: robinhood,
+    transport: custom(eth),
+  });
+  const publicClient = createPublicClient({
+    chain: robinhood,
+    transport: custom(eth),
+  });
+  const hash = await wallet.deployContract({
+    abi: parseAbi(["constructor(address ops_)"]),
+    bytecode: BASIN_BYTECODE,
+    args: [account],
+    account,
+    chain: robinhood,
+  });
+  const receipt = await publicClient.waitForTransactionReceipt({ hash });
+  const address = receipt.contractAddress;
+  if (!address) throw new Error("NO_ADDRESS");
+  return { hash, address };
 }
 
 export async function harvestBasin(): Promise<`0x${string}`> {

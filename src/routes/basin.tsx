@@ -4,7 +4,7 @@ import { formatEther, formatUnits } from "viem";
 import { Btn, Eyebrow, Page, Panel } from "@/components/chrome";
 import { Field } from "@/components/world";
 import { useBasin, useLaunch } from "@/lib/use-launch";
-import { basinWriteUrl, harvestBasin, hasWallet } from "@/lib/wallet";
+import { basinWriteUrl, deployBasin, harvestBasin, hasWallet } from "@/lib/wallet";
 import { BASIN_CA, explorerAddress, explorerTx, isAddr, isLaunched, short } from "@/lib/site";
 
 export const Route = createFileRoute("/basin")({ component: BasinPage });
@@ -15,10 +15,32 @@ function BasinPage() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [tx, setTx] = useState<string | null>(null);
+  const [deployed, setDeployed] = useState<string | null>(null);
   const live = isAddr(BASIN_CA);
   const launched = isLaunched();
   const landed = (state?.phase ?? 0) >= 2;
   const water = live && basin ? waterLevel(basin.eth, basin.pending) : 0.12;
+
+  const onDeploy = async () => {
+    setErr(null);
+    setBusy(true);
+    try {
+      const out = await deployBasin();
+      setTx(out.hash);
+      setDeployed(out.address);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "failed";
+      if (msg === "NO_WALLET") {
+        setErr("Connect the OPS wallet on Robinhood Chain 4663.");
+      } else if (msg === "BASIN_ALREADY_SET") {
+        setErr("Basin is already in the site constants.");
+      } else {
+        setErr(msg);
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const onHarvest = async () => {
     setErr(null);
@@ -85,10 +107,23 @@ function BasinPage() {
             />
           </div>
         ) : (
-          <p className="mt-6 max-w-md font-sans text-sm text-mute">
-            Pond is not on chain yet. Same wait as the token. Harvest stays dark until the address
-            is real.
-          </p>
+          <Panel className="mt-6">
+            <p className="font-display text-sm sm:text-base">Deploy the Basin</p>
+            <p className="mt-2 max-w-prose font-sans text-ink/75">
+              Step 1 of launch. The connected wallet becomes <span className="font-display text-label">ops</span> forever.
+              Creator fees still go to that EOA until a live claim is proven. Then we hand the role to this contract.
+            </p>
+            <Btn onClick={() => void onDeploy()} disabled={busy} className="mt-5">
+              {busy ? "Deploying…" : hasWallet() ? "Deploy Basin" : "Connect OPS wallet"}
+            </Btn>
+            {deployed && (
+              <p className="mt-4 break-all font-display text-label leading-relaxed">
+                Basin {deployed}
+                <br />
+                Send this address so it can be written into the site. Token still pending.
+              </p>
+            )}
+          </Panel>
         )}
 
         <Panel className="mt-8">

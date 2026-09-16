@@ -109,7 +109,7 @@ function Actors({
     <>
       {showCatapult && (
         <div
-          className="absolute z-20 hidden w-36 sm:block sm:left-[22%] sm:w-44 lg:w-52"
+          className="absolute z-20 hidden w-40 sm:block sm:left-[18%] sm:w-52 lg:w-60"
           style={{
             ...feet,
             transform: `rotate(${tilt}deg)`,
@@ -126,10 +126,22 @@ function Actors({
             }
             className="spr w-full"
           />
+          {showCat && (
+            <button
+              type="button"
+              onClick={() => poke("cat")}
+              className="pointer-events-auto absolute left-[48%] top-[-6%] w-[42%] border-0 bg-transparent p-0"
+              aria-label="Tap the cat"
+            >
+              <span className={spooked === "cat" ? "spook block" : "block"}>
+                <Pixel a="/sprites/cat-a.png" b="/sprites/cat-b.png" alt="The Catapoolt cat" className="w-full" />
+              </span>
+            </button>
+          )}
         </div>
       )}
 
-      {showCat && (
+      {showCat && !showCatapult && (
         <button
           type="button"
           onClick={() => poke("cat")}
@@ -253,16 +265,11 @@ export function World({
       <Clouds />
 
       <div className="relative z-10 mx-auto flex max-w-3xl flex-col items-center px-4 pb-36 pt-8 text-center sm:pb-40 sm:pt-12">
-        <h1 className="m-0">
-          <span className="sr-only">$POOLT</span>
-          <img
-            src="/sprites/title.png"
-            alt=""
-            className="spr mx-auto h-auto w-11/12 max-w-xl sm:max-w-3xl"
-          />
+        <h1 className="pixel-title m-0 font-display text-[22px] leading-none tracking-wide sm:text-4xl md:text-5xl">
+          CATAPOOLT
         </h1>
         <p className="mt-5 font-display text-label tracking-wide text-ink sm:text-xs">
-          CATAPOOLT · ON ROBINHOOD
+          $POOLT · ON ROBINHOOD
         </p>
         <p className="mt-4 max-w-lg font-display text-label leading-relaxed text-ink sm:text-xs">
           The curve is the catapult.

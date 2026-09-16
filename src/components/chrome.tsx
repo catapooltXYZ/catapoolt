@@ -17,7 +17,7 @@ export function Wordmark() {
     <span className="flex items-center gap-2" aria-label={BRAND.name}>
       <img src="/sprites/head.png" alt="" className="spr size-8 sm:size-10" />
       <span className="font-display text-[10px] leading-none tracking-wide text-gold sm:text-xs">
-        ${BRAND.ticker}
+        CATAPOOLT
       </span>
     </span>
   );
@@ -91,7 +91,6 @@ export function DirtNav() {
   const { state } = useLaunch();
   const progress = state?.progress ?? 0;
   const pct = Math.round(progress * 100);
-  const landed = (state?.phase ?? 0) >= 2;
 
   return (
     <header className="sticky top-0 z-50">
@@ -101,7 +100,7 @@ export function DirtNav() {
           <Link to="/" className="shrink-0" aria-label="Catapoolt home">
             <Wordmark />
           </Link>
-          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <div className="hidden min-w-0 items-center gap-1.5 sm:flex">
             <Chip>${BRAND.ticker}</Chip>
             <Chip>{pct}%</Chip>
             {!launched && <Chip>T-24</Chip>}
@@ -115,7 +114,7 @@ export function DirtNav() {
                 className="mc-btn inline-flex min-h-10 shrink-0 items-center bg-dirt-dark px-2 font-display text-label uppercase tracking-wide text-paper hover:bg-wood sm:px-3"
                 activeProps={{ className: "bg-rope text-paper hover:bg-rope" }}
               >
-                {item.to === "/play" && !landed ? `${item.label} · lock` : item.label}
+                {item.label}
               </Link>
             ))}
             <a

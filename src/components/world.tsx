@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Btn, Marquee } from "@/components/chrome";
+import { MeadowCast } from "@/components/meadow-cast";
 import {
   BASIN_CA,
   TOKEN_CA,
@@ -17,32 +18,6 @@ import {
 import type { Notch } from "@/lib/pons";
 
 export type MeadowFocus = "watch" | "how" | "play" | "land" | "pond";
-
-function Pixel({
-  a,
-  b,
-  alt,
-  className,
-  delay,
-}: {
-  a: string;
-  b?: string;
-  alt: string;
-  className?: string;
-  delay?: string;
-}) {
-  return (
-    <span
-      className={`relative inline-block ${className ?? ""}`}
-      style={delay ? { animationDelay: delay } : undefined}
-    >
-      <img src={a} alt={alt} className="spr block h-auto w-full" />
-      {b ? (
-        <img src={b} alt="" className="spr animate-frame absolute inset-0 block h-auto w-full" />
-      ) : null}
-    </span>
-  );
-}
 
 function Ground() {
   return (
@@ -82,140 +57,14 @@ function Clouds() {
 
 function Actors({
   progress,
-  fired,
   waiting,
-  focus,
 }: {
   progress: number;
   fired: boolean;
   waiting: boolean;
   focus: MeadowFocus;
 }) {
-  const wound = Math.max(0, Math.min(1, progress));
-  const tilt = fired ? 8 : -wound * 6;
-  const [spooked, setSpooked] = useState<string | null>(null);
-  const poke = (id: string) => {
-    setSpooked(id);
-    window.setTimeout(() => setSpooked((cur) => (cur === id ? null : cur)), 420);
-  };
-
-  const showCatapult = focus === "watch" || focus === "land";
-  const showPond = focus === "watch" || focus === "pond";
-  const showMice = focus === "watch" || focus === "how";
-  const showCat = focus !== "pond";
-  const feet = { bottom: "var(--ground-h)" } as const;
-
-  return (
-    <>
-      {showCatapult && (
-        <div
-          className="absolute z-20 hidden w-40 sm:block sm:left-[18%] sm:w-52 lg:w-60"
-          style={{
-            ...feet,
-            transform: `rotate(${tilt}deg)`,
-            transformOrigin: "40% 90%",
-            transition: "transform 900ms cubic-bezier(.2,.8,.2,1)",
-          }}
-        >
-          <img
-            src="/sprites/catapult.png"
-            alt={
-              waiting
-                ? "Catapult at rest. The arm goes up tomorrow."
-                : `Catapult wound to ${Math.round(wound * 100)} percent`
-            }
-            className="spr w-full"
-          />
-          {showCat && (
-            <button
-              type="button"
-              onClick={() => poke("cat")}
-              className="pointer-events-auto absolute left-[48%] top-[-6%] w-[42%] border-0 bg-transparent p-0"
-              aria-label="Tap the cat"
-            >
-              <span className={spooked === "cat" ? "spook block" : "block"}>
-                <Pixel a="/sprites/cat-a.png" b="/sprites/cat-b.png" alt="The Catapoolt cat" className="w-full" />
-              </span>
-            </button>
-          )}
-        </div>
-      )}
-
-      {showCat && !showCatapult && (
-        <button
-          type="button"
-          onClick={() => poke("cat")}
-          className="pointer-events-auto absolute z-30 left-[8%] w-24 border-0 bg-transparent p-0 sm:left-[18%] sm:w-32 lg:w-36"
-          style={feet}
-          aria-label="Tap the cat"
-        >
-          <span className={spooked === "cat" ? "spook block" : "block"}>
-            <Pixel a="/sprites/cat-a.png" b="/sprites/cat-b.png" alt="The Catapoolt cat" className="w-full" />
-          </span>
-        </button>
-      )}
-
-      {showPond && (
-        <div className="absolute z-20 right-[3%] w-20 sm:right-[5%] sm:w-28 lg:w-32" style={feet}>
-          <img src="/sprites/water.png" alt="" className="spr w-full" />
-          <button
-            type="button"
-            onClick={() => poke("fish")}
-            className="pointer-events-auto absolute inset-0 grid place-items-center border-0 bg-transparent p-0"
-            aria-label="Tap the fish"
-          >
-            <span className={spooked === "fish" ? "spook block w-4/5" : "animate-bob block w-4/5"}>
-              <Pixel a="/sprites/fish-a.png" b="/sprites/fish-b.png" alt="The pool fish" className="w-full" />
-            </span>
-          </button>
-        </div>
-      )}
-
-      {showMice &&
-        [0, 1].map((i) => (
-          <button
-            key={i}
-            type="button"
-            onClick={() => poke(`mouse${i}`)}
-            className={`pointer-events-auto absolute z-30 right-0 border-0 bg-transparent p-0 animate-pigwalk ${
-              i === 1 ? "hidden sm:block" : ""
-            } w-16 sm:w-24 lg:w-28`}
-            style={{ ...feet, animationDelay: `${-i * 7}s` }}
-            aria-label="Tap a mouse"
-          >
-            <span className={spooked === `mouse${i}` ? "spook block" : "block"}>
-              <Pixel
-                a="/sprites/mouse-a.png"
-                b="/sprites/mouse-b.png"
-                alt="A mouse on the grass"
-                className="w-full"
-              />
-            </span>
-          </button>
-        ))}
-
-      {focus === "how" &&
-        [1, 2].map((i) => (
-          <button
-            key={i}
-            type="button"
-            onClick={() => poke(`m${i}`)}
-            className="pointer-events-auto absolute z-30 hidden w-16 border-0 bg-transparent p-0 animate-scurry sm:block sm:w-20"
-            style={{ ...feet, left: `${12 + i * 18}%`, animationDelay: `${-i * 7}s` }}
-            aria-label="Tap a mouse"
-          >
-            <span className={spooked === `m${i}` ? "spook block" : "block"}>
-              <Pixel
-                a="/sprites/mouse-a.png"
-                b="/sprites/mouse-b.png"
-                alt=""
-                className="w-full"
-              />
-            </span>
-          </button>
-        ))}
-    </>
-  );
+  return <MeadowCast progress={progress} waiting={waiting} />;
 }
 
 function CaBar() {
